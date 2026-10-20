@@ -32,5 +32,6 @@ Data\Spells.lua
 Core\Init.lua
 Modules\SpellScanner.lua
 Modules\SecureAttributes.lua
+Modules\SpellUprank.lua
 UI\MicroBoard.lua
 UI\OptionsWindow.lua

@@ -99,6 +99,7 @@ ns.DEFAULTS = {
     smartBuff = true,
     trackSecondBuff = true,
     autoDownrank = true,
+    spellUprank = true,
     preferGroupBuff = false,
     unified = false,
     growUp = false,
