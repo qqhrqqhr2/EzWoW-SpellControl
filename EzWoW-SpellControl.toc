@@ -1,0 +1,34 @@
+## Interface: 16001
+## Title: EzWoW - Spell Control
+## Title-enUS: EzWoW - Spell Control
+## Title-koKR: EzWoW - Spell Control
+## Title-deDE: EzWoW - Spell Control
+## Title-frFR: EzWoW - Spell Control
+## Title-esES: EzWoW - Spell Control
+## Title-esMX: EzWoW - Spell Control
+## Title-ruRU: EzWoW - Spell Control
+## Title-zhCN: EzWoW - Spell Control
+## Title-zhTW: EzWoW - Spell Control
+## Notes: One-click party & raid buffs, debuff cleanse, and enemy crowd control assistant. (/ezsc)
+## Notes-enUS: One-click party & raid buffs, debuff cleanse, and enemy crowd control assistant. (/ezsc)
+## Notes-koKR: 파티·공격대 버프, 디버프 해제, 적 대상 메즈를 마우스 클릭만으로 간편하게 시전하는 스펠 컨트롤 보조 애드온입니다. (/ezsc, /스펠컨트롤)
+## Notes-deDE: Ein-Klick-Assistent für Gruppen-Buffs, Debuff-Reinigung und Gegner-Kontrolle (CC). (/ezsc)
+## Notes-frFR: Assistant en un clic pour les améliorations de groupe, la dissipation des affaiblissements et le contrôle des ennemis (CC). (/ezsc)
+## Notes-esES: Asistente de un clic para beneficios de grupo, disipación de perjuicios y control de enemigos (CC). (/ezsc)
+## Notes-esMX: Asistente de un clic para beneficios de grupo, disipación de perjuicios y control de enemigos (CC). (/ezsc)
+## Notes-ruRU: Помощник в один клик для наложения баффов, снятия дебаффов и контроля врагов (КК). (/ezsc)
+## Notes-zhCN: 小队与团队一键施放增益、驱散减益及敌对目标控制(CC)助手。(/ezsc)
+## Notes-zhTW: 小隊與團隊一鍵施放增益、驅散減益及敵對目標控場(CC)助手。(/ezsc)
+## Author: qqhrqqhr2
+## Version: 1.0.0
+## IconTexture: Interface\AddOns\EzWoW-SpellControl\Media\Icon
+## SavedVariables: EzWoW_SpellControlDB
+
+Core\Locales.lua
+Core\UIKit.lua
+Data\Spells.lua
+Core\Init.lua
+Modules\SpellScanner.lua
+Modules\SecureAttributes.lua
+UI\MicroBoard.lua
+UI\OptionsWindow.lua
