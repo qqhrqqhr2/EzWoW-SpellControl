@@ -1,4 +1,5 @@
 ## Interface: 16001
+## X-Curse-Project-ID: 1755568
 ## Title: EzWoW - Spell Control
 ## Title-enUS: EzWoW - Spell Control
 ## Title-koKR: EzWoW - Spell Control
