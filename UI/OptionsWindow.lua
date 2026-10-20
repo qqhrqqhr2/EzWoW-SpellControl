@@ -220,6 +220,12 @@ function ns:CreateSettingsWindow()
             if dbKey == "unified" or dbKey == "growUp" then
                 EzWoW_SpellControlDB.manualHeight = nil
             end
+            if InCombatLockdown and InCombatLockdown() then
+                -- unit list and cells must change together; PLAYER_REGEN_ENABLED applies both
+                ns.pendingSecureUpdate = true
+                ns:RefreshSettingsTexts()
+                return
+            end
             ns:RebuildActiveUnits()
             ns:LayoutBoardCells()
             ns:ScanAllActiveUnits()
