@@ -1,5 +1,10 @@
 # EzWoW - Spell Control (`EzWoW-SpellControl`)
 
+## CurseForge
+
+- **Project ID / 프로젝트 ID:** `1755568`
+- **Project page / 프로젝트 페이지:** [EzWoW-SpellControl](https://www.curseforge.com/wow/addons/ezwow-spell-control)
+
 **[한국어](#한국어) · [English](#english)**
 
 WoW Forever (`Interface: 16001`) · `/ezsc`
