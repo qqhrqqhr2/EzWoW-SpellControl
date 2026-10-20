@@ -178,3 +178,13 @@ Badges: `Range` out of range · `OK` buff active · offline · dead/ghost · no 
 
 - The board uses secure spell buttons, so **its cells cannot change during combat**; it refreshes when combat ends.
 - Passive spells are ignored. If a newly learned spell does not appear, press **Refresh**.
+
+---
+
+## Support / 후원
+
+If you find this addon useful, you can support its development.
+
+애드온이 도움이 되셨다면 개발 후원으로 응원해 주세요.
+
+[Buy Me a Coffee ☕](https://buymeacoffee.com/qqhrqqhr2)
