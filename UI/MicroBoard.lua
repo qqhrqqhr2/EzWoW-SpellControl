@@ -57,7 +57,8 @@ local MEDIA_PATH = "Interface\\AddOns\\EzWoW-SpellControl\\Media\\"
 local ICON_PATH  = MEDIA_PATH .. "Icon"
 local DEFAULT_SLOT_ICON = "Interface\\Icons\\Spell_Holy_MagicalSentry"
 
-local MAX_CELLS = 40
+-- 40 raid members + 1 enemy/outsider target
+local MAX_CELLS = 41
 local hoverUI = false
 local hoverUIActive = false
 local hoverExitElapsed = 0
@@ -751,7 +752,7 @@ function ns:ConfigureCleanseCellAuraContainer(cell, unit)
     local classColor = (RAID_CLASS_COLORS and classFile and RAID_CLASS_COLORS[classFile])
         or { r = ACCENT_R, g = ACCENT_G, b = ACCENT_B }
 
-    local size = (EzWoW_SpellControlDB and EzWoW_SpellControlDB.cellSize) or 36
+    local size = ns:GetCellSize()
     local filtersByType = {}
     local badgeByType = {}
     local filterParts = { tostring(unit) }
@@ -873,6 +874,7 @@ function ns:ConfigureCleanseCellAuraContainer(cell, unit)
                         nameText:SetWordWrap(false)
                         nameText:SetTextColor(unpack(STYLE.textMain))
                         nameText:SetText(shortName)
+                        nameText:SetShown(size > ns.SMALL_CELL_SIZE)
 
                         local badgeText = ab:CreateFontString(nil, "OVERLAY")
                         badgeText:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
@@ -1170,7 +1172,7 @@ function ns:BuildTacticalUnitBoard()
     resize:SetScript("OnDragStop", function()
         unitBoardFrame:StopMovingOrSizing()
         if not EzWoW_SpellControlDB then return end
-        local size = EzWoW_SpellControlDB.cellSize or 36
+        local size = ns:GetCellSize()
         EzWoW_SpellControlDB.manualWidth = math.floor(unitBoardFrame:GetWidth() + 0.5)
         EzWoW_SpellControlDB.manualHeight = math.floor(unitBoardFrame:GetHeight() + 0.5)
         EzWoW_SpellControlDB.columns = math.max(1, math.min(10, math.floor((EzWoW_SpellControlDB.manualWidth - 16) / (size + 4))))
@@ -1284,7 +1286,7 @@ function ns:LayoutBoardCells()
     }
     local collapsedGroups = EzWoW_SpellControlDB.collapsedGroups
 
-    local size = EzWoW_SpellControlDB.cellSize or 36
+    local size = ns:GetCellSize()
     local cols = math.max(1, EzWoW_SpellControlDB.columns or 5)
     local numUnits = #self.activeUnits
     local frameWidth = math.max(165, EzWoW_SpellControlDB.manualWidth or (16 + cols * (size + 4)))
@@ -1306,6 +1308,7 @@ function ns:LayoutBoardCells()
                 cell:ClearAllPoints()
                 cell:SetSize(size, size)
                 cell:SetPoint("TOPLEFT", unitBoardFrame, "TOPLEFT", 8 + columnIndex * (size + 4), -coordY - rowWidget * (size + 4))
+                if cell.nameText then cell.nameText:SetShown(size > ns.SMALL_CELL_SIZE) end
                 cell.unit = unit
                 cell._appliedAttrs = cell._appliedAttrs or {}
                 if cell._appliedAttrs.unit ~= unit then
@@ -1372,6 +1375,7 @@ function ns:LayoutBoardCells()
                 if not ccCollapsed then
                     ccCell:ClearAllPoints()
                     ccCell:SetSize(size, size)
+                    if ccCell.nameText then ccCell.nameText:SetShown(size > ns.SMALL_CELL_SIZE) end
                     ccCell:SetPoint("TOPLEFT", unitBoardFrame, "TOPLEFT", 8, -coordY)
                     ccCell.unit = "target"
                     self:ApplyCCTargetCellSecureAttributes(ccCell)
@@ -1486,7 +1490,7 @@ function ns:UpdateCCTargetCellVisual()
     local cell = unitBoardFrame.ccTargetCell
     if not cell:IsShown() then return end
 
-    local size = (EzWoW_SpellControlDB and EzWoW_SpellControlDB.cellSize) or 36
+    local size = ns:GetCellSize()
     local ccSt = self.ccTargetState or self:ScanCCTargetState()
 
     if not ccSt.hasEnemyTarget or ccSt.isDead then
@@ -1542,7 +1546,7 @@ function ns:UpdateSingleUnitCellVisualOnly(cell)
     if not cell.unit then return end
 
     local state = self.unitStates[cell.unit]
-    local size = (EzWoW_SpellControlDB and EzWoW_SpellControlDB.cellSize) or 36
+    local size = ns:GetCellSize()
 
     if not state or not state.exists then
         if cell.auraContainer then cell.auraContainer:SetAlpha(0) end

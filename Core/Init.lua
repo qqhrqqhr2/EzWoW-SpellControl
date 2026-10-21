@@ -110,7 +110,8 @@ ns.DEFAULTS = {
         cleanse = false,
         cc = false,
     },
-    cellSize = 36,
+    cellSize = 30,
+    raidCellSize = 24,
     columns = 5,
     opacity = 1.0,
     manualWidth = nil,
@@ -144,6 +145,16 @@ ns.activeUnits = { "player" }
 ns.pendingSecureUpdate = false
 ns.lastAlertTime = 0
 
+-- party and raid keep their own cell size
+ns.SMALL_CELL_SIZE = 24
+function ns:GetCellSize()
+    local db = EzWoW_SpellControlDB
+    if not db then return 30 end
+    local inRaid = IsInRaid and IsInRaid()
+    if inRaid then return db.raidCellSize or 24 end
+    return db.cellSize or 30
+end
+
 function ns:InitializeDatabase()
     EzWoW_SpellControlDB = EzWoW_SpellControlDB or {}
     for entryKey, entryValue in pairs(ns.DEFAULTS) do
@@ -164,6 +175,15 @@ function ns:InitializeDatabase()
         EzWoW_SpellControlDB.cellSizeMigrated36 = true
         if EzWoW_SpellControlDB.cellSize == 44 then
             EzWoW_SpellControlDB.cellSize = 36
+            EzWoW_SpellControlDB.manualWidth = nil
+            EzWoW_SpellControlDB.manualHeight = nil
+        end
+    end
+    -- smaller defaults: party 30, raid 24 (only touch the old default)
+    if not EzWoW_SpellControlDB.cellSizeMigrated30 then
+        EzWoW_SpellControlDB.cellSizeMigrated30 = true
+        if EzWoW_SpellControlDB.cellSize == 36 then
+            EzWoW_SpellControlDB.cellSize = 30
             EzWoW_SpellControlDB.manualWidth = nil
             EzWoW_SpellControlDB.manualHeight = nil
         end

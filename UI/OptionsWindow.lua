@@ -119,7 +119,7 @@ function ns:CreateSettingsWindow()
     if self.settingsFrame then return self.settingsFrame end
 
     local config = CreateFrame("Frame", "EzWoWSpellControlSettings", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    config:SetSize(420, 810)
+    config:SetSize(420, 844)
     config:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     config:SetFrameStrata("FULLSCREEN_DIALOG")
     config:SetToplevel(true)
@@ -244,7 +244,7 @@ function ns:CreateSettingsWindow()
         return { check = themeColor, text = resolvedValue, dbKey = dbKey, labelKey = labelKey }
     end
 
-    config:SetSize(420, 810)
+    config:SetSize(420, 844)
     config.secGeneral = section(-66)
     config.checks = {
         optionCheck("smartBuff",       -90,  "OPT_SMART_BUFF"),
@@ -353,7 +353,7 @@ function ns:CreateSettingsWindow()
 
     config.sizeLabel, config.sizeValue = stepper(
         20, -536,
-        function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.cellSize) or 36 end,
+        function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.cellSize) or 30 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
             EzWoW_SpellControlDB.cellSize = entryValue
@@ -362,11 +362,25 @@ function ns:CreateSettingsWindow()
             ns:LayoutBoardCells()
             ns:UpdateBoardVisuals()
         end,
-        28, 64, 2
+        20, 64, 2
+    )
+
+    config.raidSizeLabel, config.raidSizeValue = stepper(
+        210, -536,
+        function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.raidCellSize) or 24 end,
+        function(entryValue)
+            if not EzWoW_SpellControlDB then return end
+            EzWoW_SpellControlDB.raidCellSize = entryValue
+            EzWoW_SpellControlDB.manualWidth = nil
+            EzWoW_SpellControlDB.manualHeight = nil
+            ns:LayoutBoardCells()
+            ns:UpdateBoardVisuals()
+        end,
+        20, 64, 2
     )
 
     config.colsLabel, config.colsValue = stepper(
-        210, -536,
+        20, -570,
         function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.columns) or 5 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
@@ -383,7 +397,7 @@ function ns:CreateSettingsWindow()
         return math.floor(((EzWoW_SpellControlDB and EzWoW_SpellControlDB.opacity) or 1) * 100 + 0.5)
     end
     config.alphaLabel, config.alphaValue = stepper(
-        20, -570,
+        210, -570,
         opacityPct,
         function(entryValue)
             if EzWoW_SpellControlDB then EzWoW_SpellControlDB.opacity = entryValue / 100 end
@@ -393,7 +407,7 @@ function ns:CreateSettingsWindow()
 
     local fadeCheck = CreateFrame("CheckButton", nil, config, "UICheckButtonTemplate")
     fadeCheck:SetSize(26, 26)
-    fadeCheck:SetPoint("TOPLEFT", 210, -571)
+    fadeCheck:SetPoint("TOPLEFT", 20, -605)
     local fadeText = config:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     fadeText:SetPoint("LEFT", fadeCheck, "RIGHT", 4, 0)
     fadeText:SetWidth(160)
@@ -440,21 +454,21 @@ function ns:CreateSettingsWindow()
         return buttonWidget
     end
 
-    config.lockBtn = actionBtn(20, -604, function()
+    config.lockBtn = actionBtn(20, -638, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.lockBoard = not EzWoW_SpellControlDB.lockBoard
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
     end)
 
-    config.visBtn = actionBtn(219, -604, function()
+    config.visBtn = actionBtn(219, -638, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.showBoard = not EzWoW_SpellControlDB.showBoard
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
     end)
 
-    config.expandBtn = actionBtn(20, -639, function()
+    config.expandBtn = actionBtn(20, -673, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.collapsed = false
         EzWoW_SpellControlDB.collapsedGroups = { buff = false, cleanse = false, cc = false }
@@ -462,7 +476,7 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.collapseBtn = actionBtn(219, -639, function()
+    config.collapseBtn = actionBtn(219, -673, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.collapsed = true
         EzWoW_SpellControlDB.collapsedGroups = { buff = true, cleanse = true, cc = true }
@@ -470,7 +484,7 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.refreshBtn = actionBtn(20, -674, function()
+    config.refreshBtn = actionBtn(20, -708, function()
         ns:ScanLearnedSpells()
         ns:RebuildActiveUnits()
         ns:LayoutBoardCells()
@@ -478,7 +492,7 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.resetPosBtn = actionBtn(219, -674, function()
+    config.resetPosBtn = actionBtn(219, -708, function()
         if InCombatLockdown and InCombatLockdown() then return end
         if EzWoW_SpellControlDB then
             EzWoW_SpellControlDB.boardPoint = nil
@@ -618,7 +632,10 @@ function ns:RefreshSettingsTexts()
     fitFontStringToWidth(themeColor.langBtn.label, self:L("OPT_LANGUAGE") .. ": " .. langLabel .. " ▼", 365, 12, 9)
 
     fitFontStringToWidth(themeColor.sizeLabel, self:L("OPT_SIZE"), 88, 12, 9)
-    themeColor.sizeValue:SetText(tostring(EzWoW_SpellControlDB.cellSize or 36))
+    themeColor.sizeValue:SetText(tostring(EzWoW_SpellControlDB.cellSize or 30))
+
+    fitFontStringToWidth(themeColor.raidSizeLabel, self:L("OPT_RAID_SIZE"), 88, 12, 9)
+    themeColor.raidSizeValue:SetText(tostring(EzWoW_SpellControlDB.raidCellSize or 24))
 
     fitFontStringToWidth(themeColor.colsLabel, self:L("OPT_COLUMNS"), 88, 12, 9)
     themeColor.colsValue:SetText(tostring(EzWoW_SpellControlDB.columns or 5))
