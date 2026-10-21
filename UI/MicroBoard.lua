@@ -73,18 +73,27 @@ function TacticalUnitBoard.fitFontStringToWidth(fs, text, maxWidth, baseSize, mi
     fs._lastFitWidth = maxWidth
     fs._lastFitBase = baseSize
     fs:SetWordWrap(false)
-    local font, _, flags = fs:GetFont()
+    -- SetTextScale keeps the font object (and any font addon's face); SetFont is the old-client fallback
+    if fs.SetTextScale then fs:SetTextScale(1) end
+    local font, rawSize, flags = fs:GetFont()
     if not font then
         fs:SetText(text)
         return
     end
-    fs:SetFont(font, baseSize, flags)
+    local function applySize(size)
+        if fs.SetTextScale and rawSize and rawSize > 0 then
+            fs:SetTextScale(size / rawSize)
+        else
+            fs:SetFont(font, size, flags)
+        end
+    end
+    applySize(baseSize)
     fs:SetText(text)
     local size = baseSize
     local resolveW = fs.GetUnboundedStringWidth or fs.GetStringWidth
     while (resolveW(fs) or 0) > maxWidth and size > minSize do
         size = size - 0.5
-        fs:SetFont(font, size, flags)
+        applySize(size)
     end
 end
 
