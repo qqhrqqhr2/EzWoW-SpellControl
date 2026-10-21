@@ -299,16 +299,21 @@ function ns:CreateSettingsWindow()
     learnedBox:SetTextColor(0.655, 0.725, 0.773)
     config.learnedBox = learnedBox
 
-    config.langBtn = constructSelectBtn(20, -469, 380, function()
-        if not EzWoW_SpellControlDB then return end
-        local currentState = EzWoW_SpellControlDB.lang or "Auto"
-        local entryIndex = 1
-        for index, entryValue in ipairs(ns.SUPPORTED_LANGS) do
-            if entryValue.code == currentState then entryIndex = index; break end
-        end
-        EzWoW_SpellControlDB.lang = ns.SUPPORTED_LANGS[(entryIndex % #ns.SUPPORTED_LANGS) + 1].code
-        ns:RefreshAllUI()
-    end)
+    config.langBtn = constructSelectBtn(20, -469, 380, nil)
+    -- click the box, then pick a language from the list
+    local langItems = {}
+    for index, entryValue in ipairs(ns.SUPPORTED_LANGS) do langItems[index] = { value = entryValue.code, text = entryValue.label } end
+    ns.LanguageDropdown.Attach(config.langBtn, {
+        items = langItems,
+        width = 200,
+        colors = { accent = { ACCENT_R, ACCENT_G, ACCENT_B, 1 } },
+        get = function() return EzWoW_SpellControlDB and EzWoW_SpellControlDB.lang or "Auto" end,
+        set = function(code)
+            if not EzWoW_SpellControlDB then return end
+            EzWoW_SpellControlDB.lang = code
+            ns:RefreshAllUI()
+        end,
+    })
 
     config.secControls = section(-508)
 

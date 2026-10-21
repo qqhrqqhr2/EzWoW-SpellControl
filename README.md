@@ -71,7 +71,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 | ① | 위로 펼치기 (창을 화면 아래쪽에 둘 때) | 끔 |
 | ② | 좌클릭 버프 / 우클릭 버프: 자동 추천 · 특정 버프 · 사용 안 함 | 자동 추천 |
 | ③ | 보유 버프 · 보유 해제 · 보유 메즈 (좌/우) 목록 | - |
-| ④ | 언어 (자동 + 8개 언어 순환) | 자동 |
+| ④ | 언어 (상자를 누르고 목록에서 자동 + 8개 언어 중 고름) | 자동 |
 | ⑤ | 아이콘 크기 · 한 줄 개수 · 불투명도 · 마우스 올릴 때만 표시 | 36 · 5 · 100% · 끔 |
 | ⑥ | 창 잠금 · 창 숨기기 · 전체 펼치기 · 전체 접기 · 새로고침 · 위치 초기화 | - |
 | | 후원하기 · 주소 복사 | - |
@@ -156,7 +156,7 @@ Badges: `Range` out of range · `OK` buff active · offline · dead/ghost · no 
 | ① | Expand upward (when placed at bottom of screen) | Off |
 | ② | Left-Click / Right-Click buff: Auto · a specific buff · none | Auto |
 | ③ | Learned buffs · cleanses · CC (L/R) | - |
-| ④ | Language (cycles Auto + 8 languages) | Auto |
+| ④ | Language (click the box, pick Auto or one of 8 languages from the list) | Auto |
 | ⑤ | Icon size · Per row · Opacity · Show only on mouseover | 36 · 5 · 100% · Off |
 | ⑥ | Lock window · Hide window · Expand all · Collapse all · Refresh · Reset position | - |
 | | Support · Copy link | - |
