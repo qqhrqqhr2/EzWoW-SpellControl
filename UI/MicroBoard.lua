@@ -1327,6 +1327,7 @@ function ns:LayoutBoardCells()
         groupHeader:SetPoint("TOPLEFT", unitBoardFrame, "TOPLEFT", 8, -coordY)
         groupHeader:SetWidth(frameWidth - 16)
         groupHeader.label:SetText((collapsed and ">  " or "v  ") .. titleText .. "  |  " .. countNum)
+        ns.UIKit:FitFontString(groupHeader.label, frameWidth - 50, 1)  -- keep clear of the drag grip
         groupHeader.bg:SetAlpha((locked and not hoverUI) and 0 or 1)
         groupHeader.accent:SetAlpha((locked and not hoverUI) and 0 or 1)
         if groupHeader.grip then groupHeader.grip:SetShown(not locked) end

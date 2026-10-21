@@ -681,6 +681,7 @@ function ns:RegisterBlizzardCanvasLauncher()
     open.label:SetPoint("CENTER")
     open.label:SetTextColor(ACCENT_R, ACCENT_G, ACCENT_B)
     open.label:SetText(self:L("CANVAS_OPEN_BTN"))
+    ns.UIKit:FitFontString(open.label, 212, 1)
     open:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.15, 0.26, 0.28, 1)
         self:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 1)
@@ -701,6 +702,7 @@ function ns:RegisterBlizzardCanvasLauncher()
     panelFrameEntry:SetScript("OnShow", function()
         desc:SetText(ns:L("CANVAS_DESC"))
         open.label:SetText(ns:L("CANVAS_OPEN_BTN"))
+        ns.UIKit:FitFontString(open.label, 212, 1)
         slashInfo:SetText(ns:L("CANVAS_SLASH_INFO"))
     end)
 
@@ -728,6 +730,7 @@ function ns:RefreshAllUI()
     if self.canvasPanel then
         self.canvasPanel.desc:SetText(self:L("CANVAS_DESC"))
         self.canvasPanel.openBtn.label:SetText(self:L("CANVAS_OPEN_BTN"))
+        ns.UIKit:FitFontString(self.canvasPanel.openBtn.label, 212, 1)
         self.canvasPanel.slashInfo:SetText(self:L("CANVAS_SLASH_INFO"))
     end
 
