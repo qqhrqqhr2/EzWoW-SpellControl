@@ -461,7 +461,7 @@ local lDede = {
     MSG_POS_RESET = "Position wurde zurückgesetzt.",
     MSG_LOCKED = "Fenster gesperrt.",
     MSG_UNLOCKED = "Fenster entsperrt.",
-    CANVAS_DESC = "Links/Rechtsklick für Gruppen-Buffs, Debuff-Reinigung und Gegner-Kontrolle (CC).",
+    CANVAS_DESC = "Links/Rechtsklick für Gruppen-Buffs, Debuff-Reinigung und Gegner-Kontrolle (CC).\nEinstellungen über das Zahnrad im Fenster oder /ezsc öffnen.",
     CANVAS_OPEN_BTN = "Einstellungen (/ezsc)",
     CANVAS_SLASH_INFO = "Befehle: /ezsc, /spellcontrol, /스펠컨트롤",
 }
@@ -602,7 +602,7 @@ local lFrfr = {
     MSG_POS_RESET = "Position réinitialisée.",
     MSG_LOCKED = "Fenêtre verrouillée.",
     MSG_UNLOCKED = "Fenêtre déverrouillée.",
-    CANVAS_DESC = "Clic gauche/droit pour lancer des buffs, dissiper les affaiblissements et contrôler les cibles ennemies.",
+    CANVAS_DESC = "Clic gauche/droit pour lancer des buffs, dissiper les affaiblissements et contrôler les cibles ennemies.\nOuvrez les options via l'engrenage de la fenêtre ou /ezsc.",
     CANVAS_OPEN_BTN = "Options (/ezsc)",
     CANVAS_SLASH_INFO = "Commandes : /ezsc, /spellcontrol, /스펠컨트롤",
 }
@@ -743,7 +743,7 @@ local lEses = {
     MSG_POS_RESET = "Posición restablecida.",
     MSG_LOCKED = "Ventana bloqueada.",
     MSG_UNLOCKED = "Ventana desbloqueada.",
-    CANVAS_DESC = "Clic izquierdo/derecho para lanzar beneficios, disipar perjuicios y controlar enemigos.",
+    CANVAS_DESC = "Clic izquierdo/derecho para lanzar beneficios, disipar perjuicios y controlar enemigos.\nAbre las opciones con el engranaje de la ventana o /ezsc.",
     CANVAS_OPEN_BTN = "Opciones (/ezsc)",
     CANVAS_SLASH_INFO = "Comandos: /ezsc, /spellcontrol, /스펠컨트롤",
 }
@@ -776,7 +776,7 @@ local lRuru = {
     SHORT_CLICK_R = "П",
     BADGE_DISPEL_L = "Л:%s",
     BADGE_DISPEL_R = "П:%s",
-    BADGE_ABOLISHING = "Тик",
+    BADGE_ABOLISHING = "Актив",
     BADGE_BUFF_L = "Л:Бафф",
     BADGE_BUFF_R = "П:Бафф",
     BADGE_BUFF_L_DOWN = "Л:Бафф",
@@ -884,7 +884,7 @@ local lRuru = {
     MSG_POS_RESET = "Позиция окна сброшена.",
     MSG_LOCKED = "Окно заблокировано.",
     MSG_UNLOCKED = "Окно разблокировано.",
-    CANVAS_DESC = "ЛКМ/ПКМ для наложения баффов, снятия дебаффов и контроля враждебных целей.",
+    CANVAS_DESC = "ЛКМ/ПКМ для наложения баффов, снятия дебаффов и контроля враждебных целей.\nНастройки: кнопка-шестерёнка в окне или /ezsc.",
     CANVAS_OPEN_BTN = "Настройки (/ezsc)",
     CANVAS_SLASH_INFO = "Команды: /ezsc, /spellcontrol, /스펠컨트롤",
 }
