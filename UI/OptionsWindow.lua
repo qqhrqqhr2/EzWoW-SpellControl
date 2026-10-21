@@ -525,7 +525,10 @@ function ns:CreateSettingsWindow()
 
     local foot = config:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     foot:SetPoint("BOTTOM", 0, 12)
-    foot:SetText("EzWoW - Spell Control v1.0.0  ·  /ezsc")
+    -- version comes from the toc, so it never goes stale
+    local getMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+    local version = getMeta and getMeta("EzWoW-SpellControl", "Version")
+    foot:SetText("EzWoW - Spell Control" .. (version and (" v" .. version) or "") .. "  ·  /ezsc")
 
     config:SetScript("OnShow", function() ns:RefreshSettingsTexts() end)
 
