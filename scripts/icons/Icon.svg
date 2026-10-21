@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Same frame geometry as the other EzWoW addons, retaining this addon's mint accent. -->
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#1d2831" stroke="#344c5b" stroke-width="8"/>
+  <rect x="17" y="17" width="222" height="222" rx="47" fill="none" stroke="#469c88" stroke-width="6"/>
+  <rect x="23" y="23" width="210" height="210" rx="41" fill="none" stroke="#0b1217" stroke-width="4"/>
+  <circle cx="52" cy="43" r="9" fill="#485e60"/>
+  <!-- Preserve the spell/health droplet, cross and sparkle. -->
+  <path d="M124 63 L95 104 C78 121 60 135 60 162 C60 199 88 222 123 222 C159 222 184 198 184 165 C184 141 169 127 152 109 Z"
+        fill="#56dcb3" stroke="#0b1217" stroke-width="11" stroke-linejoin="round"/>
+  <ellipse cx="122" cy="166" rx="41" ry="39" fill="#83e6c6"/>
+  <path d="M114 139 H132 V156 H149 V174 H132 V192 H114 V174 H97 V156 H114 Z"
+        fill="#edf4f7" stroke="#344c5b" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M191 49 L201 76 L228 86 L201 96 L191 123 L181 96 L154 86 L181 76 Z"
+        fill="#f2c46d" stroke="#0b1217" stroke-width="7" stroke-linejoin="round"/>
+</svg>
