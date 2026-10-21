@@ -21,7 +21,7 @@
 ## Notes-zhCN: 小队与团队一键施放增益、驱散减益及敌对目标控制(CC)助手。(/ezsc)
 ## Notes-zhTW: 小隊與團隊一鍵施放增益、驅散減益及敵對目標控場(CC)助手。(/ezsc)
 ## Author: qqhrqqhr2
-## Version: 2.0.1
+## Version: 2.0.2
 ## Category: EzWoW
 ## IconTexture: Interface\AddOns\EzWoW-SpellControl\Media\Icon
 ## SavedVariables: EzWoW_SpellControlDB
