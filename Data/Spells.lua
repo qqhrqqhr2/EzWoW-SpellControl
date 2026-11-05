@@ -129,8 +129,7 @@ NS.CLASS_DISPELS = {
     },
 }
 
--- All Paladin standard blessings share a single per-caster slot on a target
--- (Blessing of Salvation is separate in Forever and can stack alongside them).
+-- All Paladin standard blessings share a single per-caster slot on a target.
 local PALADIN_MAIN_BLESSING_IDS = {
     -- Might
     19740, 19834, 19835, 19836, 19837, 19838, 25291, 25782, 25916,
@@ -138,8 +137,6 @@ local PALADIN_MAIN_BLESSING_IDS = {
     19742, 19850, 19852, 19853, 19854, 25290, 25894, 25918,
     -- Kings
     20217, 25898,
-    -- Light
-    19977, 19978, 19979, 25890,
     -- Sanctuary
     20911, 20912, 20913, 20914, 25899,
 }
@@ -396,18 +393,6 @@ NS.CLASS_BUFFS = {
             },
         },
         {
-            key = "BLESS_SALVATION",
-            defaultSlot = 2, -- Ctrl + Right-Click (Stacks with main blessing in Forever!)
-            smartOrder = 4,
-            isSelfOnly = false,
-            ranks = {
-                R(1038, 1, 26),
-            },
-            groupRanks = {
-                R(25895, 1, 60),
-            },
-        },
-        {
             key = "RIGHTEOUS_FURY",
             defaultSlot = 2,
             smartOrder = 5,
@@ -432,22 +417,6 @@ NS.CLASS_BUFFS = {
             },
             groupRanks = {
                 R(25899, 1, 60),
-            },
-        },
-        {
-            key = "BLESS_LIGHT",
-            defaultSlot = 2,
-            smartOrder = 7,
-            isSelfOnly = false,
-            isMainBlessing = true,
-            alsoSatisfiedBy = PALADIN_MAIN_BLESSING_IDS,
-            ranks = {
-                R(19977, 1, 40),
-                R(19978, 2, 50),
-                R(19979, 3, 60),
-            },
-            groupRanks = {
-                R(25890, 1, 60),
             },
         },
     },

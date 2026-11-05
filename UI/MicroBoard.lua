@@ -8,6 +8,7 @@ local TacticalUnitBoard = ns.TacticalUnitBoard or {}
 ns.TacticalUnitBoard = TacticalUnitBoard
 
 local issecretvalue = _G.issecretvalue or function() return false end
+local safeVal = ns.UnwrapSafeValue
 
 function TacticalUnitBoard.commitFrameBoolAlpha(frame, rawBool, trueAlpha, falseAlpha)
     if not frame then return end
@@ -324,7 +325,7 @@ function TacticalUnitBoard.presentCellTooltip(cell, forceRebuild)
     end
 
     local unit = cell.unit
-    if not unit or not UnitExists(unit) then return end
+    if not unit or not safeVal(UnitExists(unit)) then return end
     local state = ns.unitStates[unit] or ns:ScanUnitState(unit)
     local role = cell.sectionRole or "BUFF"
     local aurasRestricted = ns.IsAuraDataRestricted and ns:IsAuraDataRestricted() or false
@@ -984,7 +985,7 @@ function TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, frameName, sect
                     ns:ApplyCCTargetCellSecureAttributes(self)
                 end
                 ns:UpdateCCTargetCellVisual()
-            elseif unit and UnitExists(unit) then
+            elseif unit and safeVal(UnitExists(unit)) then
                 ns:ScanUnitState(unit)
                 ns:UpdateSingleUnitCell(unit)
             end

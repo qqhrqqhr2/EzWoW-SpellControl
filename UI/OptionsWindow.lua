@@ -464,6 +464,9 @@ function ns:CreateSettingsWindow()
     config.visBtn = actionBtn(219, -638, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.showBoard = not EzWoW_SpellControlDB.showBoard
+        if InCombatLockdown and InCombatLockdown() then
+            DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_AFTER_COMBAT"))
+        end
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
     end)
@@ -493,7 +496,10 @@ function ns:CreateSettingsWindow()
     end)
 
     config.resetPosBtn = actionBtn(219, -708, function()
-        if InCombatLockdown and InCombatLockdown() then return end
+        if InCombatLockdown and InCombatLockdown() then
+            DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_COMBAT_BLOCKED"))
+            return
+        end
         if EzWoW_SpellControlDB then
             EzWoW_SpellControlDB.boardPoint = nil
             EzWoW_SpellControlDB.manualWidth = nil
@@ -780,6 +786,9 @@ SlashCmdList["EZWOWSPELLCONTROL"] = function(msg)
     if cmd == "board" or cmd == "toggle" then
         if EzWoW_SpellControlDB then
             EzWoW_SpellControlDB.showBoard = not EzWoW_SpellControlDB.showBoard
+            if InCombatLockdown and InCombatLockdown() then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_AFTER_COMBAT"))
+            end
             ns:RefreshAllUI()
         end
     elseif cmd == "lock" then
@@ -788,8 +797,13 @@ SlashCmdList["EZWOWSPELLCONTROL"] = function(msg)
             ns:RefreshAllUI()
             DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L(EzWoW_SpellControlDB.lockBoard and "MSG_LOCKED" or "MSG_UNLOCKED"))
         end
+    elseif cmd == "help" or cmd == "?" then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_HELP"))
     elseif cmd == "reset" then
-        if InCombatLockdown and InCombatLockdown() then return end
+        if InCombatLockdown and InCombatLockdown() then
+            DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_COMBAT_BLOCKED"))
+            return
+        end
         if EzWoW_SpellControlDB then
             EzWoW_SpellControlDB.boardPoint = nil
             EzWoW_SpellControlDB.manualWidth = nil

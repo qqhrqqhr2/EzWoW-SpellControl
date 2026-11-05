@@ -698,7 +698,6 @@ function ns:GetCandidateBuffDefsForUnit(unit, classFile)
 
         addPaladinCandidate(bestMain)
 
-        addPaladinCandidate(self:GetBuffDefByKey("BLESS_SALVATION"))
         if hasSelfUnit then
             addPaladinCandidate(self:GetBuffDefByKey("RIGHTEOUS_FURY"))
         end
@@ -1609,7 +1608,7 @@ function ns:ScanUnitState(unit)
 end
 
 function ns:CycleUnitLeftClickBuff(unit, delta)
-    if not unit or not UnitExists(unit) then return false end
+    if not unit or not safeVal(UnitExists(unit)) then return false end
     local unitState = self:ScanUnitState(unit)
     local choices = unitState and unitState.validChoices
     if not choices or #choices <= 1 then return false end
@@ -1699,7 +1698,7 @@ function ns:RebuildActiveUnits()
         local numericVal = GetNumGroupMembers and GetNumGroupMembers() or 40
         for index = 1, math.min(numericVal, 40) do
             local unitRef = "raid" .. index
-            if UnitExists(unitRef) then
+            if safeVal(UnitExists(unitRef)) then
                 table.insert(self.activeUnits, unitRef)
             end
         end
@@ -1710,7 +1709,7 @@ function ns:RebuildActiveUnits()
         table.insert(self.activeUnits, "player")
         for index = 1, 4 do
             local unitRef = "party" .. index
-            if UnitExists(unitRef) then
+            if safeVal(UnitExists(unitRef)) then
                 table.insert(self.activeUnits, unitRef)
             end
         end

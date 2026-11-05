@@ -52,7 +52,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 #### 똑똑한 버프 고르기
 
-- **직업별 맞춤**: 나에게만 거는 버프(내면의 열정, 얼음 갑옷, 정의의 격노, 번개 보호막, 악마의 갑옷 등)는 내 칸에서만 검사합니다. 마나가 없는 직업(전사·도적)에게는 지능·정신력·지혜의 축복을 권하지 않습니다. 성기사는 대상의 역할·직업에 맞춰 힘 · 지혜 · 구원의 축복을 고릅니다.
+- **직업별 맞춤**: 나에게만 거는 버프(내면의 열정, 얼음 갑옷, 정의의 격노, 번개 보호막, 악마의 갑옷 등)는 내 칸에서만 검사합니다. 마나가 없는 직업(전사·도적)에게는 지능·정신력·지혜의 축복을 권하지 않습니다. 성기사는 대상의 역할·직업에 맞춰 힘 · 지혜 · 왕의 축복을 고릅니다.
 - **저레벨 대상 자동 하향**: 저레벨 파티원에게는 그 레벨이 받을 수 있는 가장 높은 단계(`주문이름(X 레벨)`)를 자동으로 계산해 겁니다.
 - **단체 버프 우선**: 야생의 선물, 신비한 총명함, 천상의 기원, 상급 축복 등을 배웠다면 먼저 쓰도록 할 수 있습니다.
 
@@ -137,7 +137,7 @@ Badges: `Range` out of range · `OK` buff active · offline · dead/ghost · no 
 
 #### Smart buff choice
 
-- **Class-aware**: self-only buffs (Inner Fire, Ice Armor, Righteous Fury, Lightning Shield, Demon Armor, …) are checked on your own cell only. Intellect, Spirit and Blessing of Wisdom are not suggested for warriors and rogues. Paladins get Might, Wisdom or Salvation matched to the target's role and class.
+- **Class-aware**: self-only buffs (Inner Fire, Ice Armor, Righteous Fury, Lightning Shield, Demon Armor, …) are checked on your own cell only. Intellect, Spirit and Blessing of Wisdom are not suggested for warriors and rogues. Paladins get Might, Wisdom or Kings matched to the target's role and class.
 - **Auto-downranking**: for low-level members the highest rank they can receive (`Spell (Rank X)`) is calculated and cast.
 - **Prefer group buffs**: optionally use Gift of the Wild, Arcane Brilliance, Prayer of Fortitude, Greater Blessings, … first when learned.
 

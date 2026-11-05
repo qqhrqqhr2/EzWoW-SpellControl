@@ -162,6 +162,9 @@ local lEnus = {
     MSG_POS_RESET = "Window position has been reset.",
     MSG_LOCKED = "Window locked.",
     MSG_UNLOCKED = "Window unlocked.",
+    MSG_COMBAT_BLOCKED = "Not available in combat. Try again after combat.",
+    MSG_AFTER_COMBAT = "This change will apply when combat ends.",
+    MSG_HELP = "Commands: /ezsc (settings) · /ezsc toggle (show/hide window) · /ezsc lock (lock/unlock) · /ezsc reset (reset position)",
 
     CANVAS_DESC = "Cast party/raid buffs, dispel debuffs, and crowd-control enemy targets with simple Left/Right-Clicks.\nOpen settings via the gear button on the window or /ezsc.",
     CANVAS_OPEN_BTN = "Open Settings (/ezsc)",
@@ -321,6 +324,9 @@ local lKokr = {
     MSG_POS_RESET = "창 위치가 초기화되었습니다.",
     MSG_LOCKED = "창이 잠겼습니다.",
     MSG_UNLOCKED = "창 잠금이 해제되었습니다.",
+    MSG_COMBAT_BLOCKED = "전투 중에는 할 수 없습니다. 전투가 끝난 뒤 다시 시도하세요.",
+    MSG_AFTER_COMBAT = "이 변경은 전투가 끝나면 적용됩니다.",
+    MSG_HELP = "명령어: /ezsc (설정) · /ezsc toggle (창 보이기/숨기기) · /ezsc lock (잠금/해제) · /ezsc reset (위치 초기화)",
 
     CANVAS_DESC = "버프 · 해제 · 메즈 칸에서 마우스 좌/우클릭만으로 파티원 버프, 디버프 해제, 적 대상 메즈를 간편하게 시전합니다.\n창 상단의 톱니바퀴 버튼이나 /ezsc 명령어로 설정창을 열 수 있습니다.",
     CANVAS_OPEN_BTN = "설정 열기 (/ezsc)",

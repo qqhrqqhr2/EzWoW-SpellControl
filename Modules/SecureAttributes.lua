@@ -51,17 +51,20 @@ function ns:ApplyBuffCellSecureAttributes(cell, unit, state)
     cell.sectionRole = "BUFF"
     cell.targetClickIsBuff = true
     cell.targetClickIsCC = false
+
+    -- the bound* fields drive the badge/tooltip; in combat the secure attributes stay frozen,
+    -- so keep showing what a click will really cast until they can be re-applied
+    if InCombatLockdown and InCombatLockdown() then
+        self.pendingSecureUpdate = true
+        return
+    end
+
     cell.boundLClickBuff = buff1Spell
     cell.boundRClickBuff = buff2Spell
     cell.boundLClickDispel = nil
     cell.boundRClickDispel = nil
     cell.boundCtrlLClickBuff = buff1Spell
     cell.boundCtrlRClickBuff = buff2Spell
-
-    if InCombatLockdown and InCombatLockdown() then
-        self.pendingSecureUpdate = true
-        return
-    end
 
     SecureCellController.assignAttrIfChanged(cell, "unit", unit)
     SecureCellController.assignAttrIfChanged(cell, "shift-type1", nil)
@@ -280,6 +283,7 @@ function ns:InitializeSpellControlEngine()
     if self.RefreshAllUI then
         self:RefreshAllUI()
     end
+    self.engineInitialized = true
 end
 
 local eventFrame = CreateFrame("Frame")
@@ -326,7 +330,20 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
             ns:InitializeDatabase()
         end
     elseif event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
-        ns:InitializeSpellControlEngine()
+        if not ns.engineInitialized then
+            ns:InitializeSpellControlEngine()
+        else
+            -- later loading screens: the board already exists, only refresh the roster and cells
+            if InCombatLockdown and InCombatLockdown() then
+                ns.pendingSecureUpdate = true
+            else
+                ns:RebuildActiveUnits()
+                if ns.LayoutBoardCells then
+                    ns:LayoutBoardCells()
+                end
+            end
+            ns:ScanAllActiveUnits()
+        end
     elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then
         ns:UpdateRestrictionState(arg1, arg2)
         ns:ScanAllActiveUnits()
