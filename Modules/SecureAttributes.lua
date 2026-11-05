@@ -306,19 +306,45 @@ local EVENTS_TO_REGISTER = {
     "PLAYER_REGEN_DISABLED",
     "PLAYER_REGEN_ENABLED",
     "ADDON_RESTRICTION_STATE_CHANGED",
+    "BAG_UPDATE_DELAYED",
 }
 for _, evName in ipairs(EVENTS_TO_REGISTER) do
     pcall(eventFrame.RegisterEvent, eventFrame, evName)
 end
 
+-- In a raid, aura changes arrive many times a second; they are collected here and
+-- each changed unit is scanned once per 0.1 s instead of once per event.
+local pendingAuraUnits = {}
+local function flushPendingAuraUnits()
+    for unitRef in pairs(pendingAuraUnits) do
+        pendingAuraUnits[unitRef] = nil
+        if ns.unitStates[unitRef] then
+            pcall(ns.ScanUnitState, ns, unitRef)
+            if ns.UpdateSingleUnitCell then
+                ns:UpdateSingleUnitCell(unitRef)
+            end
+        end
+    end
+end
+
 local rangeTickerElapsed = 0
+local auraFlushElapsed = 0
 eventFrame:SetScript("OnUpdate", function(_, elapsed)
     local dtVal = elapsed or 0
     rangeTickerElapsed = rangeTickerElapsed + dtVal
+    auraFlushElapsed = auraFlushElapsed + dtVal
 
-    if rangeTickerElapsed >= 0.4 then
+    if auraFlushElapsed >= 0.1 then
+        auraFlushElapsed = 0
+        if next(pendingAuraUnits) then flushPendingAuraUnits() end
+    end
+
+    -- full rescan (range, buffs): 0.4 s in a party, 1 s in a raid of up to 40
+    local fullScanInterval = (IsInRaid and IsInRaid()) and 1.0 or 0.4
+    if rangeTickerElapsed >= fullScanInterval then
         rangeTickerElapsed = 0
         if EzWoW_SpellControlDB and EzWoW_SpellControlDB.showBoard and ns.boardFrame and ns.boardFrame:IsShown() then
+            wipe(pendingAuraUnits)
             ns:ScanAllActiveUnits()
         end
     end
@@ -356,7 +382,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
         if ns.RefreshSettingsTexts then
             ns:RefreshSettingsTexts()
         end
-    elseif event == "GROUP_ROSTER_UPDATE" or event == "PLAYER_TARGET_CHANGED" then
+    elseif event == "GROUP_ROSTER_UPDATE" then
         ns:ScanCCTargetState()
         if InCombatLockdown and InCombatLockdown() then
             ns.pendingSecureUpdate = true
@@ -367,6 +393,35 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
                 ns:LayoutBoardCells()
             end
             ns:ScanAllActiveUnits()
+        end
+    elseif event == "PLAYER_TARGET_CHANGED" then
+        ns:ScanCCTargetState()
+        if InCombatLockdown and InCombatLockdown() then
+            ns.pendingSecureUpdate = true
+            ns:ScanAllActiveUnits()
+        else
+            -- the cells follow the "target" unit by themselves; only when the target cell
+            -- appears or disappears does the cell count change and a relayout is needed
+            local hasTargetCell = false
+            for _, unitRef in ipairs(ns.activeUnits) do
+                if unitRef == "target" then
+                    hasTargetCell = true
+                    break
+                end
+            end
+            local wantTargetCell = ns:ShouldShowTargetUnit() and true or false
+            if wantTargetCell ~= hasTargetCell then
+                ns:RebuildActiveUnits()
+                if ns.LayoutBoardCells then
+                    ns:LayoutBoardCells()
+                end
+                ns:ScanAllActiveUnits()
+            else
+                pcall(ns.ScanUnitState, ns, "target")
+                if ns.UpdateSingleUnitCell then
+                    ns:UpdateSingleUnitCell("target")
+                end
+            end
         end
     elseif event == "UPDATE_MOUSEOVER_UNIT" then
         if UnitExists and safeVal(UnitExists("mouseover")) then
@@ -404,9 +459,13 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
                 end
             end
             if ns.unitStates[unitRef] then
-                pcall(ns.ScanUnitState, ns, unitRef)
-                if ns.UpdateSingleUnitCell then
-                    ns:UpdateSingleUnitCell(unitRef)
+                if event == "UNIT_AURA" and IsInRaid and IsInRaid() then
+                    pendingAuraUnits[unitRef] = true
+                else
+                    pcall(ns.ScanUnitState, ns, unitRef)
+                    if ns.UpdateSingleUnitCell then
+                        ns:UpdateSingleUnitCell(unitRef)
+                    end
                 end
             end
         else
@@ -421,6 +480,11 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
                     ns:ScanAllActiveUnits()
                 end)
             end
+        end
+    elseif event == "BAG_UPDATE_DELAYED" then
+        -- reagent count for the group buff (board header warning)
+        if ns.RefreshBuffHeaderReagent then
+            ns:RefreshBuffHeaderReagent()
         end
     elseif event == "PLAYER_REGEN_DISABLED" then
         ns:ScanAllActiveUnits()

@@ -119,7 +119,7 @@ function ns:CreateSettingsWindow()
     if self.settingsFrame then return self.settingsFrame end
 
     local config = CreateFrame("Frame", "EzWoWSpellControlSettings", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    config:SetSize(420, 844)
+    config:SetSize(420, 878)
     config:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     config:SetFrameStrata("FULLSCREEN_DIALOG")
     config:SetToplevel(true)
@@ -244,7 +244,7 @@ function ns:CreateSettingsWindow()
         return { check = themeColor, text = resolvedValue, dbKey = dbKey, labelKey = labelKey }
     end
 
-    config:SetSize(420, 844)
+    config:SetSize(420, 878)
     config.secGeneral = section(-66)
     config.checks = {
         optionCheck("smartBuff",       -90,  "OPT_SMART_BUFF"),
@@ -259,7 +259,55 @@ function ns:CreateSettingsWindow()
         optionCheck("spellUprank",     -306, "OPT_SPELL_UPRANK"),
     }
 
-    config.secSpells = section(-340)
+    -- raid groups this player looks after (1-8); off groups get no cells in a raid
+    local raidGroupsLabel = config:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    raidGroupsLabel:SetPoint("TOPLEFT", 24, -340)
+    raidGroupsLabel:SetWidth(118)
+    raidGroupsLabel:SetJustifyH("LEFT")
+    config.raidGroupsLabel = raidGroupsLabel
+    config.raidGroupBtns = {}
+    for groupNum = 1, 8 do
+        local groupBtn = CreateFrame("Button", nil, config, BackdropTemplateMixin and "BackdropTemplate" or nil)
+        groupBtn:SetSize(28, 24)
+        groupBtn:SetPoint("TOPLEFT", 148 + (groupNum - 1) * 31, -334)
+        ns.UIKit:ApplyBackdrop(groupBtn)
+        local groupText = groupBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        groupText:SetPoint("CENTER")
+        groupText:SetText(tostring(groupNum))
+        groupBtn.label = groupText
+        groupBtn.groupNum = groupNum
+        groupBtn:SetScript("OnClick", function(self)
+            if not EzWoW_SpellControlDB then return end
+            EzWoW_SpellControlDB.raidGroups = EzWoW_SpellControlDB.raidGroups or {}
+            local groups = EzWoW_SpellControlDB.raidGroups
+            groups[self.groupNum] = (groups[self.groupNum] == false) and true or false
+            if InCombatLockdown and InCombatLockdown() then
+                ns.pendingSecureUpdate = true
+                DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_AFTER_COMBAT"))
+            else
+                ns:RebuildActiveUnits()
+                ns:LayoutBoardCells()
+                ns:ScanAllActiveUnits()
+            end
+            ns:RefreshSettingsTexts()
+        end)
+        groupBtn:SetScript("OnEnter", function(self)
+            self:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 1)
+            if GameTooltip then
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(ns:L("OPT_RAID_GROUPS") .. " " .. self.groupNum, ACCENT_R, ACCENT_G, ACCENT_B, 1)
+                GameTooltip:AddLine(ns:L("TIP_RAID_GROUPS"), 0.85, 0.90, 0.94, true)
+                GameTooltip:Show()
+            end
+        end)
+        groupBtn:SetScript("OnLeave", function()
+            ns:RefreshSettingsTexts()
+            if GameTooltip then GameTooltip:Hide() end
+        end)
+        config.raidGroupBtns[groupNum] = groupBtn
+    end
+
+    config.secSpells = section(-374)
 
     local function constructSelectBtn(x, y, w, onClick)
         local buttonWidget = CreateFrame("Button", nil, config, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -278,8 +326,8 @@ function ns:CreateSettingsWindow()
         return buttonWidget
     end
 
-    config.slot1Btn = constructSelectBtn(20, -366, 187, function() ns:CycleSelectedBuffSlot(1) end)
-    config.slot2Btn = constructSelectBtn(213, -366, 187, function() ns:CycleSelectedBuffSlot(2) end)
+    config.slot1Btn = constructSelectBtn(20, -400, 187, function() ns:CycleSelectedBuffSlot(1) end)
+    config.slot2Btn = constructSelectBtn(213, -400, 187, function() ns:CycleSelectedBuffSlot(2) end)
     -- Hover help: these boxes change the buff on each click
     for slotNum, slotBtn in ipairs({ config.slot1Btn, config.slot2Btn }) do
         slotBtn:HookScript("OnEnter", function(self)
@@ -293,7 +341,7 @@ function ns:CreateSettingsWindow()
     end
 
     local learnedPanel = CreateFrame("Frame", nil, config, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    learnedPanel:SetPoint("TOPLEFT", 20, -399)
+    learnedPanel:SetPoint("TOPLEFT", 20, -433)
     learnedPanel:SetSize(380, 62)
     ns.UIKit:ApplyBackdrop(learnedPanel)
     learnedPanel:SetBackdropColor(0.055, 0.075, 0.098, 0.90)
@@ -310,7 +358,7 @@ function ns:CreateSettingsWindow()
     learnedBox:SetTextColor(0.655, 0.725, 0.773)
     config.learnedBox = learnedBox
 
-    config.langBtn = constructSelectBtn(20, -469, 380, nil)
+    config.langBtn = constructSelectBtn(20, -503, 380, nil)
     -- click the box, then pick a language from the list
     local langItems = {}
     for index, entryValue in ipairs(ns.SUPPORTED_LANGS) do langItems[index] = { value = entryValue.code, text = entryValue.label } end
@@ -326,7 +374,7 @@ function ns:CreateSettingsWindow()
         end,
     })
 
-    config.secControls = section(-508)
+    config.secControls = section(-542)
 
     local function stepper(x, y, getVal, setVal, minVal, maxVal, step)
         local formatLocalizedLabel = config:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -363,7 +411,7 @@ function ns:CreateSettingsWindow()
     end
 
     config.sizeLabel, config.sizeValue = stepper(
-        20, -536,
+        20, -570,
         function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.cellSize) or 30 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
@@ -377,7 +425,7 @@ function ns:CreateSettingsWindow()
     )
 
     config.raidSizeLabel, config.raidSizeValue = stepper(
-        210, -536,
+        210, -570,
         function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.raidCellSize) or 24 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
@@ -391,7 +439,7 @@ function ns:CreateSettingsWindow()
     )
 
     config.colsLabel, config.colsValue = stepper(
-        20, -570,
+        20, -604,
         function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.columns) or 5 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
@@ -408,7 +456,7 @@ function ns:CreateSettingsWindow()
         return math.floor(((EzWoW_SpellControlDB and EzWoW_SpellControlDB.opacity) or 1) * 100 + 0.5)
     end
     config.alphaLabel, config.alphaValue = stepper(
-        210, -570,
+        210, -604,
         opacityPct,
         function(entryValue)
             if EzWoW_SpellControlDB then EzWoW_SpellControlDB.opacity = entryValue / 100 end
@@ -416,9 +464,33 @@ function ns:CreateSettingsWindow()
         30, 100, 10
     )
 
+    -- buffs running out within this many minutes count as missing (0 = off)
+    config.expireLabel, config.expireValue = stepper(
+        210, -639,
+        function() return (EzWoW_SpellControlDB and tonumber(EzWoW_SpellControlDB.expiringMinutes)) or 0 end,
+        function(entryValue)
+            if not EzWoW_SpellControlDB then return end
+            EzWoW_SpellControlDB.expiringMinutes = entryValue
+            ns:ScanAllActiveUnits()
+        end,
+        0, 10, 1
+    )
+    local expireHover = CreateFrame("Frame", nil, config)
+    expireHover:SetPoint("TOPLEFT", config, "TOPLEFT", 210, -639)
+    expireHover:SetSize(92, 29)
+    expireHover:EnableMouse(true)
+    expireHover:SetScript("OnEnter", function(self)
+        if not GameTooltip then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(ns:L("OPT_EXPIRING"), ACCENT_R, ACCENT_G, ACCENT_B, 1)
+        GameTooltip:AddLine(ns:L("TIP_EXPIRING"), 0.85, 0.90, 0.94, true)
+        GameTooltip:Show()
+    end)
+    expireHover:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+
     local fadeCheck = CreateFrame("CheckButton", nil, config, "UICheckButtonTemplate")
     fadeCheck:SetSize(26, 26)
-    fadeCheck:SetPoint("TOPLEFT", 20, -605)
+    fadeCheck:SetPoint("TOPLEFT", 20, -639)
     local fadeText = config:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     fadeText:SetPoint("LEFT", fadeCheck, "RIGHT", 4, 0)
     fadeText:SetWidth(160)
@@ -465,14 +537,14 @@ function ns:CreateSettingsWindow()
         return buttonWidget
     end
 
-    config.lockBtn = actionBtn(20, -638, function()
+    config.lockBtn = actionBtn(20, -672, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.lockBoard = not EzWoW_SpellControlDB.lockBoard
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
     end)
 
-    config.visBtn = actionBtn(219, -638, function()
+    config.visBtn = actionBtn(219, -672, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.showBoard = not EzWoW_SpellControlDB.showBoard
         if InCombatLockdown and InCombatLockdown() then
@@ -482,7 +554,7 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.expandBtn = actionBtn(20, -673, function()
+    config.expandBtn = actionBtn(20, -707, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.collapsed = false
         EzWoW_SpellControlDB.collapsedGroups = { buff = false, cleanse = false, cc = false }
@@ -490,7 +562,7 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.collapseBtn = actionBtn(219, -673, function()
+    config.collapseBtn = actionBtn(219, -707, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.collapsed = true
         EzWoW_SpellControlDB.collapsedGroups = { buff = true, cleanse = true, cc = true }
@@ -498,7 +570,7 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.refreshBtn = actionBtn(20, -708, function()
+    config.refreshBtn = actionBtn(20, -742, function()
         ns:ScanLearnedSpells()
         ns:RebuildActiveUnits()
         ns:LayoutBoardCells()
@@ -506,7 +578,7 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.resetPosBtn = actionBtn(219, -708, function()
+    config.resetPosBtn = actionBtn(219, -742, function()
         if InCombatLockdown and InCombatLockdown() then
             DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_COMBAT_BLOCKED"))
             return
@@ -581,6 +653,21 @@ function ns:RefreshSettingsTexts()
     for _, item in ipairs(themeColor.checks) do
         item.check:SetChecked(EzWoW_SpellControlDB[item.dbKey] and true or false)
         fitFontStringToWidth(item.text, self:L(item.labelKey), 340, 12, 9)
+    end
+
+    fitFontStringToWidth(themeColor.raidGroupsLabel, self:L("OPT_RAID_GROUPS"), 118, 12, 9)
+    local raidGroups = EzWoW_SpellControlDB.raidGroups
+    for groupNum, groupBtn in ipairs(themeColor.raidGroupBtns) do
+        local isOn = not (type(raidGroups) == "table" and raidGroups[groupNum] == false)
+        if isOn then
+            groupBtn:SetBackdropColor(0.11, 0.20, 0.22, 0.96)
+            groupBtn:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.95)
+            groupBtn.label:SetTextColor(ACCENT_R, ACCENT_G, ACCENT_B)
+        else
+            groupBtn:SetBackdropColor(0.114, 0.157, 0.192, 0.96)
+            groupBtn:SetBackdropBorderColor(0.204, 0.298, 0.357, 1)
+            groupBtn.label:SetTextColor(0.45, 0.50, 0.54)
+        end
     end
 
     local classToken = self.playerClass
@@ -660,6 +747,10 @@ function ns:RefreshSettingsTexts()
     local pct = math.floor(((EzWoW_SpellControlDB.opacity) or 1) * 100 + 0.5)
     fitFontStringToWidth(themeColor.alphaLabel, self:L("OPT_OPACITY"), 88, 12, 9)
     themeColor.alphaValue:SetText(pct .. "%")
+
+    local expireMin = tonumber(EzWoW_SpellControlDB.expiringMinutes) or 0
+    fitFontStringToWidth(themeColor.expireLabel, self:L("OPT_EXPIRING"), 88, 12, 9)
+    themeColor.expireValue:SetText(expireMin > 0 and string.format(self:L("OPT_EXPIRING_VALUE"), expireMin) or self:L("OPT_EXPIRING_OFF"))
 
     themeColor.fadeCheck:SetChecked(EzWoW_SpellControlDB.fade and true or false)
     fitFontStringToWidth(themeColor.fadeText, self:L("OPT_FADE"), 160, 12, 9)

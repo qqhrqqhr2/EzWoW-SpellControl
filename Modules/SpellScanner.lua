@@ -1225,14 +1225,22 @@ function ns:ScanUnitState(unit)
     end
 
     unitState.exists = true
-    local rawUName = nil
+    local rawUName, rawSecond = nil, nil
     if UnitName then
-        local okN, uName = pcall(UnitName, unit)
-        if okN then rawUName = uName end
+        local okN, uName, uSecond = pcall(UnitName, unit)
+        if okN then rawUName, rawSecond = uName, uSecond end
     end
     unitState.rawName = rawUName
     unitState.rawNameSecret = issecretvalue(rawUName)
-    unitState.name = safeVal(rawUName) or unitState.name or unit
+    -- names on this server can have a second part (surname); UnitName returns it as the
+    -- second value, which on other servers is the realm, so it is added unless it is the realm
+    local fullName = safeVal(rawUName)
+    local second = safeVal(rawSecond)
+    if fullName and type(second) == "string" and second ~= "" then
+        local realm = GetRealmName and safeVal(GetRealmName())
+        if second ~= realm then fullName = fullName .. " " .. second end
+    end
+    unitState.name = fullName or unitState.name or unit
     local classLocale, classFile = UnitClass(unit)
     unitState.classLocale = safeVal(classLocale) or unitState.classLocale or ""
     unitState.classFile = safeVal(classFile) or unitState.classFile or "PRIEST"
@@ -1275,22 +1283,35 @@ function ns:ScanUnitState(unit)
 
     local activeBuffIDs = {}
     local activeBuffNames = {}
+    -- buffs that run out within the "expiring soon" window count as missing (0 = off);
+    -- auras whose timing is secret are never treated as expiring
+    local expiringBuffIDs = {}
+    local expiringBuffNames = {}
+    local freshBuffIDs = {}
+    local freshBuffNames = {}
+    local expireWindow = (EzWoW_SpellControlDB and tonumber(EzWoW_SpellControlDB.expiringMinutes) or 0) * 60
+    local nowTime = (expireWindow > 0 and GetTime) and GetTime() or nil
     local anyHelpfulRestricted = false
     for index = 1, 40 do
-        local displayName2, spellId
-        local nameSec, idSec = false, false
+        local displayName2, spellId, expTime
+        local nameSec, idSec, expSec = false, false, false
         if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
             local isCallOk, aura = pcall(C_UnitAuras.GetAuraDataByIndex, unit, index, "HELPFUL")
             if not hasValuePresent(isCallOk, aura) then break end
             displayName2, nameSec = safeField(aura, "name")
             spellId, idSec = safeField(aura, "spellId")
+            if nowTime then
+                expTime, expSec = safeField(aura, "expirationTime")
+            end
         elseif UnitBuff then
-            local isCallOk, bName, _, _, _, _, _, _, _, _, bSpellId = pcall(UnitBuff, unit, index)
+            local isCallOk, bName, _, _, _, _, bExp, _, _, _, bSpellId = pcall(UnitBuff, unit, index)
             if not hasValuePresent(isCallOk, bName) then break end
             nameSec = issecretvalue(bName)
             idSec = issecretvalue(bSpellId)
+            expSec = issecretvalue(bExp)
             displayName2 = safeVal(bName)
             spellId = safeVal(bSpellId)
+            expTime = safeVal(bExp)
         else
             break
         end
@@ -1299,6 +1320,15 @@ function ns:ScanUnitState(unit)
         end
         if spellId then activeBuffIDs[spellId] = true end
         if displayName2 then activeBuffNames[displayName2] = true end
+        if nowTime then
+            if not expSec and type(expTime) == "number" and expTime > 0 and (expTime - nowTime) < expireWindow then
+                if spellId then expiringBuffIDs[spellId] = true end
+                if displayName2 then expiringBuffNames[displayName2] = true end
+            else
+                if spellId then freshBuffIDs[spellId] = true end
+                if displayName2 then freshBuffNames[displayName2] = true end
+            end
+        end
     end
 
     local function hasAuraActiveByIDOrName(entityID, nmVal)
@@ -1410,6 +1440,19 @@ function ns:ScanUnitState(unit)
     end
 
     local function hasBuffActiveOnUnit(buffDef)
+        if nowTime then
+            -- another copy that is not about to run out still counts as active
+            local expiring = false
+            for entityID in pairs(buffDef.satisfiedByIDs) do
+                if freshBuffIDs[entityID] then return true end
+                if expiringBuffIDs[entityID] then expiring = true end
+            end
+            for nmVal in pairs(buffDef.satisfiedByNames) do
+                if freshBuffNames[nmVal] then return true end
+                if expiringBuffNames[nmVal] then expiring = true end
+            end
+            if expiring then return false end
+        end
         for entityID in pairs(buffDef.satisfiedByIDs) do
             if hasAuraActiveByIDOrName(entityID, nil) then return true end
         end
@@ -1694,12 +1737,35 @@ end
 
 function ns:RebuildActiveUnits()
     wipe(self.activeUnits)
+    self.unitGroupBreaks = nil
     if IsInRaid and IsInRaid() then
+        -- raid: sorted by group (1 -> 8), only the groups picked in the settings;
+        -- each group starts a new row on the board (unitGroupBreaks[index] = group)
+        local pickedGroups = EzWoW_SpellControlDB and EzWoW_SpellControlDB.raidGroups
+        local byGroup = {}
         local numericVal = GetNumGroupMembers and GetNumGroupMembers() or 40
         for index = 1, math.min(numericVal, 40) do
             local unitRef = "raid" .. index
             if safeVal(UnitExists(unitRef)) then
-                table.insert(self.activeUnits, unitRef)
+                local subgroup = 1
+                if GetRaidRosterInfo then
+                    local okInfo, _, _, groupNum = pcall(GetRaidRosterInfo, index)
+                    groupNum = okInfo and safeVal(groupNum)
+                    if type(groupNum) == "number" then subgroup = groupNum end
+                end
+                if not (type(pickedGroups) == "table" and pickedGroups[subgroup] == false) then
+                    byGroup[subgroup] = byGroup[subgroup] or {}
+                    table.insert(byGroup[subgroup], unitRef)
+                end
+            end
+        end
+        self.unitGroupBreaks = {}
+        for groupNum = 1, 8 do
+            if byGroup[groupNum] then
+                self.unitGroupBreaks[#self.activeUnits + 1] = groupNum
+                for _, unitRef in ipairs(byGroup[groupNum]) do
+                    table.insert(self.activeUnits, unitRef)
+                end
             end
         end
         if #self.activeUnits == 0 then
@@ -1721,6 +1787,9 @@ function ns:RebuildActiveUnits()
 
     if self:ShouldShowTargetUnit() then
         table.insert(self.activeUnits, "target")
+        if self.unitGroupBreaks then
+            self.unitGroupBreaks[#self.activeUnits] = "target"
+        end
     end
 end
 
@@ -1759,6 +1828,58 @@ function ns:ScanAllActiveUnits()
     if self.UpdateBoardVisuals then
         self:UpdateBoardVisuals()
     end
+end
+
+-----------------------------------------------------------------------------
+-- Group Buff Reagents (group spell ID -> reagent item ID)
+-----------------------------------------------------------------------------
+local GROUP_BUFF_REAGENTS = {
+    [21849] = 17021, [21850] = 17026,                   -- Gift of the Wild: Wild Berries / Wild Thornroot
+    [21562] = 17028, [21564] = 17029,                   -- Prayer of Fortitude: Holy Candle / Sacred Candle
+    [27681] = 17029,                                    -- Prayer of Spirit: Sacred Candle
+    [27683] = 17029,                                    -- Prayer of Shadow Protection: Sacred Candle
+    [23028] = 17020,                                    -- Arcane Brilliance: Arcane Powder
+    [25782] = 21177, [25916] = 21177, [25894] = 21177,  -- Greater Blessings: Symbol of Kings
+    [25918] = 21177, [25898] = 21177, [25899] = 21177,
+}
+ns.REAGENT_LOW_STOCK = 5
+
+function ns:GetGroupSpellReagent(spellID)
+    return spellID and GROUP_BUFF_REAGENTS[spellID] or nil
+end
+
+-- returns name, count, icon of a reagent item (name may be a placeholder until cached)
+function ns:GetReagentInfo(itemID)
+    if not itemID then return nil, 0, nil end
+    local count = 0
+    if C_Item and C_Item.GetItemCount then
+        local okCnt, cnt = pcall(C_Item.GetItemCount, itemID)
+        if okCnt and type(cnt) == "number" then count = cnt end
+    elseif type(GetItemCount) == "function" then
+        local okCnt, cnt = pcall(GetItemCount, itemID)
+        if okCnt and type(cnt) == "number" then count = cnt end
+    end
+    local itemName, itemIcon
+    if C_Item and C_Item.GetItemNameByID then
+        local okNm, nm = pcall(C_Item.GetItemNameByID, itemID)
+        if okNm and type(nm) == "string" then itemName = nm end
+    end
+    if not itemName and C_Item and C_Item.RequestLoadItemDataByID then
+        pcall(C_Item.RequestLoadItemDataByID, itemID)
+    end
+    if C_Item and C_Item.GetItemIconByID then
+        local okIc, ic = pcall(C_Item.GetItemIconByID, itemID)
+        if okIc and ic then itemIcon = ic end
+    end
+    return itemName or ("item:" .. tostring(itemID)), count, itemIcon
+end
+
+-- reagent of the group buff picked for slot 1 (only while group buffs are preferred)
+function ns:GetSelectedGroupBuffReagent()
+    if not (EzWoW_SpellControlDB and EzWoW_SpellControlDB.preferGroupBuff) then return nil end
+    local def = self:GetSelectedBuffSlot1Def()
+    local rankObj = def and def.highestGroup
+    return rankObj and self:GetGroupSpellReagent(rankObj.id) or nil
 end
 
 -----------------------------------------------------------------------------

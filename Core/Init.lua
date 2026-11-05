@@ -101,6 +101,7 @@ ns.DEFAULTS = {
     autoDownrank = true,
     spellUprank = true,
     preferGroupBuff = false,
+    expiringMinutes = 3,
     unified = false,
     growUp = false,
     fade = false,

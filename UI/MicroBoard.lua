@@ -419,6 +419,15 @@ function TacticalUnitBoard.presentCellTooltip(cell, forceRebuild)
                             ACCENT_R, ACCENT_G, ACCENT_B
                         )
                     end
+                    local reagentID = chVal.isGroup and chVal.rankObj and ns:GetGroupSpellReagent(chVal.rankObj.id)
+                    if reagentID then
+                        local itemName, itemCount = ns:GetReagentInfo(reagentID)
+                        local lowStock = itemCount < (ns.REAGENT_LOW_STOCK or 5)
+                        GameTooltip:AddLine(
+                            string.format("   " .. ns:L("TIP_REAGENT_COUNT"), itemName, itemCount),
+                            unpack(lowStock and STYLE.warn or STYLE.textSub)
+                        )
+                    end
                 end
             end
 
@@ -1299,13 +1308,28 @@ function ns:LayoutBoardCells()
     local containsCCSection = (EzWoW_SpellControlDB.showCC ~= false) and (#self.learnedCCDefs > 0)
     local locked = EzWoW_SpellControlDB.lockBoard
 
+    -- grid position of every unit; in a raid each group starts a new row
+    local gridPos, gridRows = {}, 0
+    do
+        local breaks = self.unitGroupBreaks
+        local rowIndex, colIndex = 0, 0
+        for index = 1, numUnits do
+            if index > 1 and ((breaks and breaks[index]) or colIndex >= cols) then
+                rowIndex = rowIndex + 1
+                colIndex = 0
+            end
+            gridPos[index] = { rowIndex, colIndex }
+            colIndex = colIndex + 1
+        end
+        gridRows = (numUnits > 0) and (rowIndex + 1) or 0
+    end
+
     local function layoutUnitCellArray(cellArray, showCells)
         for index = 1, MAX_CELLS do
             local cell = cellArray[index]
             local unit = showCells and self.activeUnits[index] or nil
             if unit then
-                local rowWidget = math.floor((index - 1) / cols)
-                local columnIndex = (index - 1) % cols
+                local rowWidget, columnIndex = gridPos[index][1], gridPos[index][2]
                 cell:ClearAllPoints()
                 cell:SetSize(size, size)
                 cell:SetPoint("TOPLEFT", unitBoardFrame, "TOPLEFT", 8 + columnIndex * (size + 4), -coordY - rowWidget * (size + 4))
@@ -1331,7 +1355,7 @@ function ns:LayoutBoardCells()
             end
         end
         if showCells and numUnits > 0 then
-            coordY = coordY + math.ceil(numUnits / cols) * (size + 4) + 5
+            coordY = coordY + gridRows * (size + 4) + 5
         end
     end
 
@@ -1339,8 +1363,11 @@ function ns:LayoutBoardCells()
         groupHeader:ClearAllPoints()
         groupHeader:SetPoint("TOPLEFT", unitBoardFrame, "TOPLEFT", 8, -coordY)
         groupHeader:SetWidth(frameWidth - 16)
-        groupHeader.label:SetText((collapsed and ">  " or "v  ") .. titleText .. "  |  " .. countNum)
-        ns.UIKit:FitFontString(groupHeader.label, frameWidth - 50, 1)  -- keep clear of the drag grip
+        groupHeader._ezLabelBase = (collapsed and ">  " or "v  ") .. titleText .. "  |  " .. countNum
+        groupHeader._ezLabelWidth = frameWidth - 50  -- keep clear of the drag grip
+        groupHeader._ezLabelSuffix = nil
+        groupHeader.label:SetText(groupHeader._ezLabelBase)
+        ns.UIKit:FitFontString(groupHeader.label, groupHeader._ezLabelWidth, 1)
         groupHeader.bg:SetAlpha((locked and not hoverUI) and 0 or 1)
         groupHeader.accent:SetAlpha((locked and not hoverUI) and 0 or 1)
         if groupHeader.grip then groupHeader.grip:SetShown(not locked) end
@@ -1354,6 +1381,7 @@ function ns:LayoutBoardCells()
             if containsBuffSection then
                 local buffCollapsed = collapsedGroups.buff and true or false
                 configureHeaderBar(unitBoardFrame.buffHeader, buffCollapsed, self:L("GROUP_BUFF"), numUnits)
+                self:RefreshBuffHeaderReagent()
                 layoutUnitCellArray(unitBoardFrame.buffCells, not buffCollapsed)
             else
                 unitBoardFrame.buffHeader:Hide()
@@ -1735,9 +1763,29 @@ function ns:UpdateSingleUnitCell(unit)
     end
 end
 
+-- low-stock warning for the group buff reagent on the buff header (text only, safe in combat)
+function ns:RefreshBuffHeaderReagent()
+    local header = self.boardFrame and self.boardFrame.buffHeader
+    if not header or not header._ezLabelBase or not header.label then return end
+    local suffix = ""
+    local itemID = self.GetSelectedGroupBuffReagent and self:GetSelectedGroupBuffReagent()
+    if itemID then
+        local itemName, count, itemIcon = self:GetReagentInfo(itemID)
+        if count < (ns.REAGENT_LOW_STOCK or 5) then
+            local itemTag = itemIcon and ("|T" .. tostring(itemIcon) .. ":0|t") or itemName
+            suffix = "  |cffE77C70" .. itemTag .. " " .. string.format(self:L("HDR_REAGENT_LOW"), count) .. "|r"
+        end
+    end
+    if header._ezLabelSuffix == suffix then return end
+    header._ezLabelSuffix = suffix
+    header.label:SetText(header._ezLabelBase .. suffix)
+    ns.UIKit:FitFontString(header.label, header._ezLabelWidth, 1)
+end
+
 function ns:UpdateBoardVisuals()
     if not self.boardFrame then return end
     local inCombat = InCombatLockdown and InCombatLockdown()
+    self:RefreshBuffHeaderReagent()
 
     for index = 1, #self.activeUnits do
         local bCell = self.boardFrame.buffCells and self.boardFrame.buffCells[index]
