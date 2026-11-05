@@ -141,6 +141,8 @@ local lEnus = {
 
     OPT_PRIMARY_BUFF = "Left-Click:",
     OPT_SECOND_BUFF = "Right-Click:",
+    TIP_BUFF_SLOT1 = "Click to change the buff cast when you left-click a party or raid member.\nCycles through Auto and your learned buffs.",
+    TIP_BUFF_SLOT2 = "Click to change the buff cast when you right-click a party or raid member.\nCycles through Auto, your learned buffs and None.",
     OPT_AUTO = "Auto",
     OPT_NONE = "None",
     OPT_LEARNED_BUFFS = "Buffs (L/R):",
@@ -303,6 +305,8 @@ local lKokr = {
 
     OPT_PRIMARY_BUFF = "좌클릭 버프:",
     OPT_SECOND_BUFF = "우클릭 버프:",
+    TIP_BUFF_SLOT1 = "클릭하면 파티·공격대원을 좌클릭할 때 걸 버프를 바꿉니다.\n자동 → 배운 버프 순서로 바뀝니다.",
+    TIP_BUFF_SLOT2 = "클릭하면 파티·공격대원을 우클릭할 때 걸 버프를 바꿉니다.\n자동 → 배운 버프 → 없음 순서로 바뀝니다.",
     OPT_AUTO = "자동 추천",
     OPT_NONE = "사용 안 함",
     OPT_LEARNED_BUFFS = "보유 버프 (좌/우):",

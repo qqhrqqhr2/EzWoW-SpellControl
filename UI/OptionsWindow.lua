@@ -280,6 +280,17 @@ function ns:CreateSettingsWindow()
 
     config.slot1Btn = constructSelectBtn(20, -366, 187, function() ns:CycleSelectedBuffSlot(1) end)
     config.slot2Btn = constructSelectBtn(213, -366, 187, function() ns:CycleSelectedBuffSlot(2) end)
+    -- Hover help: these boxes change the buff on each click
+    for slotNum, slotBtn in ipairs({ config.slot1Btn, config.slot2Btn }) do
+        slotBtn:HookScript("OnEnter", function(self)
+            if not GameTooltip then return end
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(ns:L(slotNum == 2 and "OPT_SECOND_BUFF" or "OPT_PRIMARY_BUFF"), ACCENT_R, ACCENT_G, ACCENT_B, 1)
+            GameTooltip:AddLine(ns:L(slotNum == 2 and "TIP_BUFF_SLOT2" or "TIP_BUFF_SLOT1"), 0.85, 0.90, 0.94, true)
+            GameTooltip:Show()
+        end)
+        slotBtn:HookScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    end
 
     local learnedPanel = CreateFrame("Frame", nil, config, BackdropTemplateMixin and "BackdropTemplate" or nil)
     learnedPanel:SetPoint("TOPLEFT", 20, -399)
@@ -796,6 +807,9 @@ SlashCmdList["EZWOWSPELLCONTROL"] = function(msg)
             EzWoW_SpellControlDB.lockBoard = not EzWoW_SpellControlDB.lockBoard
             ns:RefreshAllUI()
             DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L(EzWoW_SpellControlDB.lockBoard and "MSG_LOCKED" or "MSG_UNLOCKED"))
+            if InCombatLockdown and InCombatLockdown() then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_AFTER_COMBAT"))
+            end
         end
     elseif cmd == "help" or cmd == "?" then
         DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_HELP"))
