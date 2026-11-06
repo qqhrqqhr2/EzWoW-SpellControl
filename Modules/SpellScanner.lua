@@ -454,8 +454,44 @@ function ns:UpdateRestrictionState(restrictionType, restrictionState)
     end
 end
 
+-- Aura lists can be hidden from addons (in combat, and in some instances even out of
+-- combat); reading them by index then raises an error. A "hidden" answer is kept for the
+-- rest of the current frame only, so the failing read is not repeated many times per
+-- frame; a "readable" answer is checked again every time.
+local auraLockStamp = nil
+
+local function markAurasLocked()
+    auraLockStamp = GetTime and GetTime() or 0
+end
+
+local function areAurasLocked()
+    local now = GetTime and GetTime() or 0
+    if C_Secrets and type(C_Secrets.ShouldAurasBeSecret) == "function" then
+        local okS, isSecret = pcall(C_Secrets.ShouldAurasBeSecret)
+        if okS and (issecretvalue(isSecret) or isSecret == true) then
+            auraLockStamp = now
+            return true
+        end
+    end
+    if auraLockStamp == now then
+        return true
+    end
+    if not (C_UnitAuras and type(C_UnitAuras.GetAuraDataByIndex) == "function") then
+        return false
+    end
+    if pcall(C_UnitAuras.GetAuraDataByIndex, "player", 1, "HELPFUL") then
+        return false
+    end
+    auraLockStamp = now
+    return true
+end
+ns.AreAurasLocked = areAurasLocked
+
 function ns:IsAuraDataRestricted()
     if InCombatLockdown and InCombatLockdown() then
+        return true
+    end
+    if areAurasLocked() then
         return true
     end
     if Enum and Enum.AddOnRestrictionType then
@@ -1292,11 +1328,28 @@ function ns:ScanUnitState(unit)
     local expireWindow = (EzWoW_SpellControlDB and tonumber(EzWoW_SpellControlDB.expiringMinutes) or 0) * 60
     local nowTime = (expireWindow > 0 and GetTime) and GetTime() or nil
     local anyHelpfulRestricted = false
+    -- while aura lists are hidden, buffs are looked up one spell at a time below and
+    -- anything that cannot be read falls back to the last state seen before
+    local aurasLocked = areAurasLocked()
+    if aurasLocked then
+        anyHelpfulRestricted = true
+    end
     for index = 1, 40 do
+        if aurasLocked then break end
         local displayName2, spellId, expTime
         local nameSec, idSec, expSec = false, false, false
         if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
             local isCallOk, aura = pcall(C_UnitAuras.GetAuraDataByIndex, unit, index, "HELPFUL")
+            if not isCallOk then
+                -- became hidden after the check: buffs read so far are kept, but the
+                -- list is incomplete, so nothing is judged as "running out" from it
+                markAurasLocked()
+                aurasLocked = true
+                anyHelpfulRestricted = true
+                wipe(expiringBuffIDs)
+                wipe(expiringBuffNames)
+                break
+            end
             if not hasValuePresent(isCallOk, aura) then break end
             displayName2, nameSec = safeField(aura, "name")
             spellId, idSec = safeField(aura, "spellId")
@@ -1331,9 +1384,52 @@ function ns:ScanUnitState(unit)
         end
     end
 
+    -- lookup while aura lists are hidden: true = present, false = surely absent,
+    -- nil = cannot tell. A spell is only asked about when the client says its aura
+    -- stays readable; a found aura counts as present even if its fields are hidden.
+    local function lookupLockedAura(entityID, nmVal)
+        if entityID then
+            local secretFn = C_Secrets and C_Secrets.ShouldSpellAuraBeSecret
+            local hasSecretFn = type(secretFn) == "function"
+            local readable = true
+            if hasSecretFn then
+                local okS, isSecret = pcall(secretFn, entityID)
+                readable = okS and not issecretvalue(isSecret) and isSecret == false
+            end
+            if readable and C_UnitAuras then
+                local answered = false
+                if unit == "player" and C_UnitAuras.GetPlayerAuraBySpellID then
+                    local isCallOk, aura = pcall(C_UnitAuras.GetPlayerAuraBySpellID, entityID)
+                    if hasValuePresent(isCallOk, aura) then return true end
+                    if isCallOk then answered = true end
+                end
+                if C_UnitAuras.GetUnitAuraBySpellID then
+                    local isCallOk, aura = pcall(C_UnitAuras.GetUnitAuraBySpellID, unit, entityID)
+                    if hasValuePresent(isCallOk, aura) then return true end
+                    if isCallOk then answered = true end
+                end
+                if answered and hasSecretFn then
+                    return false
+                end
+            end
+            return nil
+        end
+        if nmVal and C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
+            -- only own casts can be found by name here
+            local isCallOk, aura = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, nmVal, "HELPFUL|PLAYER")
+            if hasValuePresent(isCallOk, aura) then return true end
+        end
+        return nil
+    end
+
     local function hasAuraActiveByIDOrName(entityID, nmVal)
         if entityID and activeBuffIDs[entityID] then return true end
         if nmVal and activeBuffNames[nmVal] then return true end
+        if aurasLocked then
+            if entityID and lookupLockedAura(entityID, nil) then return true end
+            if nmVal and lookupLockedAura(nil, nmVal) then return true end
+            return false
+        end
         if entityID and unit == "player" and C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID then
             local isCallOk, aura = pcall(C_UnitAuras.GetPlayerAuraBySpellID, entityID)
             if isCallOk and safeVal(aura) ~= nil then
@@ -1452,6 +1548,26 @@ function ns:ScanUnitState(unit)
                 if expiringBuffNames[nmVal] then expiring = true end
             end
             if expiring then return false end
+        end
+        if aurasLocked then
+            -- every tracked spell ID gave a sure "absent": the buff is missing now
+            local allAnswered = next(buffDef.satisfiedByIDs) ~= nil
+            for entityID in pairs(buffDef.satisfiedByIDs) do
+                if activeBuffIDs[entityID] then return true end
+                local found = lookupLockedAura(entityID, nil)
+                if found then return true end
+                if found == nil then allAnswered = false end
+            end
+            for nmVal in pairs(buffDef.satisfiedByNames) do
+                if activeBuffNames[nmVal] or lookupLockedAura(nil, nmVal) then
+                    return true
+                end
+            end
+            if allAnswered then return false end
+            if unitState.lastKnownActiveBuffKeys and unitState.lastKnownActiveBuffKeys[buffDef.key] ~= nil then
+                return unitState.lastKnownActiveBuffKeys[buffDef.key]
+            end
+            return false
         end
         for entityID in pairs(buffDef.satisfiedByIDs) do
             if hasAuraActiveByIDOrName(entityID, nil) then return true end

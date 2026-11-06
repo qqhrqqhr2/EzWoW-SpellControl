@@ -119,7 +119,7 @@ function ns:CreateSettingsWindow()
     if self.settingsFrame then return self.settingsFrame end
 
     local config = CreateFrame("Frame", "EzWoWSpellControlSettings", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    config:SetSize(420, 878)
+    config:SetSize(420, 944)
     config:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     config:SetFrameStrata("FULLSCREEN_DIALOG")
     config:SetToplevel(true)
@@ -244,7 +244,7 @@ function ns:CreateSettingsWindow()
         return { check = themeColor, text = resolvedValue, dbKey = dbKey, labelKey = labelKey }
     end
 
-    config:SetSize(420, 878)
+    config:SetSize(420, 944)
     config.secGeneral = section(-66)
     config.checks = {
         optionCheck("smartBuff",       -90,  "OPT_SMART_BUFF"),
@@ -597,6 +597,43 @@ function ns:CreateSettingsWindow()
         DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_POS_RESET"))
     end)
 
+    config.spellsByLevelBtn = actionBtn(20, -777, function()
+        if ns.ToggleSpellsByLevel then ns:ToggleSpellsByLevel() end
+    end)
+
+    -- plain on/off options that need no board relayout
+    local function simpleCheck(dbKey, x, y, width, onChange)
+        local check = CreateFrame("CheckButton", nil, config, "UICheckButtonTemplate")
+        check:SetSize(26, 26)
+        check:SetPoint("TOPLEFT", x, y)
+        local label = config:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        label:SetPoint("LEFT", check, "RIGHT", 4, 0)
+        label:SetWidth(width)
+        label:SetJustifyH("LEFT")
+        label:SetTextColor(0.929, 0.957, 0.969)
+        check:SetScript("OnClick", function(self)
+            if not EzWoW_SpellControlDB then return end
+            EzWoW_SpellControlDB[dbKey] = not not self:GetChecked()
+            if onChange then onChange() end
+        end)
+        check:SetScript("OnEnter", function(self)
+            if GameTooltip and label:GetText() then
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(label:GetText(), ACCENT_R, ACCENT_G, ACCENT_B, 1, true)
+                GameTooltip:Show()
+            end
+        end)
+        check:SetScript("OnLeave", function()
+            if GameTooltip then GameTooltip:Hide() end
+        end)
+        return { check = check, text = label, dbKey = dbKey, width = width }
+    end
+
+    config.levelUpNoticeCheck = simpleCheck("levelUpSpellNotice", 219, -779, 150)
+    config.spellbookDockCheck = simpleCheck("spellbookDock", 20, -812, 345, function()
+        if ns.UpdateSpellbookPanel then ns:UpdateSpellbookPanel() end
+    end)
+
     local donate = CreateFrame("Button", nil, config, BackdropTemplateMixin and "BackdropTemplate" or nil)
     donate:SetPoint("BOTTOMLEFT", config, "BOTTOMLEFT", 20, 38)
     donate:SetPoint("BOTTOMRIGHT", config, "BOTTOMRIGHT", -20, 38)
@@ -761,6 +798,12 @@ function ns:RefreshSettingsTexts()
     fitFontStringToWidth(themeColor.collapseBtn.label, self:L("BTN_COLLAPSE"), 171, 12, 9)
     fitFontStringToWidth(themeColor.refreshBtn.label, self:L("BTN_REFRESH"), 171, 12, 9)
     fitFontStringToWidth(themeColor.resetPosBtn.label, self:L("BTN_RESET_POS"), 171, 12, 9)
+    fitFontStringToWidth(themeColor.spellsByLevelBtn.label, self:L("BTN_SPELLS_BY_LEVEL"), 171, 12, 9)
+    for _, item in ipairs({ themeColor.levelUpNoticeCheck, themeColor.spellbookDockCheck }) do
+        item.check:SetChecked(EzWoW_SpellControlDB[item.dbKey] ~= false)
+    end
+    fitFontStringToWidth(themeColor.levelUpNoticeCheck.text, self:L("OPT_LEVELUP_NOTICE"), 150, 12, 9)
+    fitFontStringToWidth(themeColor.spellbookDockCheck.text, self:L("OPT_SPELLBOOK_DOCK"), 345, 12, 9)
     fitFontStringToWidth(themeColor.donateBtn.label, self:L("BTN_DONATE"), 365, 12, 10)
     fitFontStringToWidth(themeColor.hint, self:L("HINT_MOVE_RESIZE"), 375, 10, 8)
 end
@@ -869,6 +912,9 @@ function ns:RefreshAllUI()
 
     self:RefreshSettingsTexts()
     self:UpdateBoardVisuals()
+    if self.RefreshSpellsByLevel then
+        self:RefreshSpellsByLevel()
+    end
 end
 
 function ns:InitUI()
@@ -902,6 +948,8 @@ SlashCmdList["EZWOWSPELLCONTROL"] = function(msg)
                 DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_AFTER_COMBAT"))
             end
         end
+    elseif cmd == "spells" or cmd == "spell" or cmd == "주문" or cmd == "스킬" then
+        if ns.ToggleSpellsByLevel then ns:ToggleSpellsByLevel() end
     elseif cmd == "help" or cmd == "?" then
         DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_HELP"))
     elseif cmd == "reset" then

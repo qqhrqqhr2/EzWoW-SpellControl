@@ -33,6 +33,8 @@ Core\Init.lua
 Modules\SpellScanner.lua
 Modules\SecureAttributes.lua
 Modules\SpellUprank.lua
+Modules\TrainerSpells.lua
 UI\MicroBoard.lua
 UI\LanguageDropdown.lua
+UI\SpellsByLevel.lua
 UI\OptionsWindow.lua
