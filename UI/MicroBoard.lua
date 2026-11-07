@@ -93,7 +93,10 @@ function TacticalUnitBoard.fitFontStringToWidth(fs, text, maxWidth, baseSize, mi
     fs:SetText(text)
     local size = baseSize
     local resolveW = fs.GetUnboundedStringWidth or fs.GetStringWidth
-    while (resolveW(fs) or 0) > maxWidth and size > minSize do
+    while size > minSize do
+        -- the width can come back as a secret value (combat): keep the size then
+        local width = resolveW(fs)
+        if type(width) ~= "number" or (issecretvalue and issecretvalue(width)) or width <= maxWidth then break end
         size = size - 0.5
         applySize(size)
     end
@@ -766,7 +769,9 @@ function ns:ConfigureCleanseCellAuraContainer(cell, unit)
     local filtersByType = {}
     local badgeByType = {}
     local filterParts = { tostring(unit) }
-    local visualParts = { tostring(shortName), tostring(classFile), tostring(size) }
+    -- name and class colour are updated on the existing buttons (below), so a
+    -- new container is only made when the size or the dispel badges change
+    local visualParts = { tostring(size) }
 
     for _, dType in ipairs(CLEANSE_SLOT_TYPES) do
         local cureEntry = self.activeDispelTypes and self.activeDispelTypes[dType]
@@ -791,6 +796,12 @@ function ns:ConfigureCleanseCellAuraContainer(cell, unit)
     end
 
     local visualSig = table.concat(visualParts, "|")
+    -- who the cell shows now (also read by aura buttons made later)
+    cell._ezscShortName, cell._ezscClassColor = shortName, classColor
+    for _, part in ipairs(cell._ezscAuraParts or {}) do
+        pcall(part.name.SetText, part.name, shortName)
+        pcall(part.bar.SetColorTexture, part.bar, classColor.r, classColor.g, classColor.b, 1)
+    end
     local filterSig = table.concat(filterParts, "|")
     local restricted = self.IsAuraDataRestricted and self:IsAuraDataRestricted() or false
 
@@ -801,6 +812,7 @@ function ns:ConfigureCleanseCellAuraContainer(cell, unit)
             cell.auraContainer:ClearAllPoints()
             cell.auraContainer = nil
         end
+        cell._ezscAuraParts = {}
 
         TacticalUnitBoard.prepareAuraContainerLoaded()
         local okAC, acVal = pcall(CreateFrame, "AuraContainer", nil, cell, "CustomAuraContainerTemplate")
@@ -883,8 +895,12 @@ function ns:ConfigureCleanseCellAuraContainer(cell, unit)
                         nameText:SetJustifyH("CENTER")
                         nameText:SetWordWrap(false)
                         nameText:SetTextColor(unpack(STYLE.textMain))
-                        nameText:SetText(shortName)
+                        nameText:SetText(cell._ezscShortName or shortName)
                         nameText:SetShown(size > ns.SMALL_CELL_SIZE)
+                        local c = cell._ezscClassColor or classColor
+                        classBar:SetColorTexture(c.r, c.g, c.b, 1)
+                        cell._ezscAuraParts = cell._ezscAuraParts or {}
+                        table.insert(cell._ezscAuraParts, { name = nameText, bar = classBar })
 
                         local badgeText = ab:CreateFontString(nil, "OVERLAY")
                         badgeText:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
@@ -929,6 +945,190 @@ function ns:ConfigureCleanseCellAuraContainer(cell, unit)
         end
         cell.auraContainerConfiguredUnit = unit
         cell._ezscFilterSig = filterSig
+    end
+end
+
+-- Buff cells: in combat the aura lists cannot be read, so the scan keeps the last
+-- answer. Each buff cell gets one engine aura container (made once, reused) with a
+-- single HELPFUL slot that matches every spell ID of the buff the cell is about.
+-- While that buff is on the unit the engine shows a "buff present" button over the
+-- cell; when it is gone the button disappears and the cell's own "missing" look shows.
+local BUFF_OVERLAY_SLOT = "EZBC_BUFF_PRESENT"
+
+local function buildBuffOverlayFilter(buffDef)
+    local ids = {}
+    local hasAny = false
+    for spellID in pairs(buffDef and buffDef.satisfiedByIDs or {}) do
+        if type(spellID) == "number" then
+            ids[spellID] = true
+            hasAny = true
+        end
+    end
+    if not hasAny then return nil end
+    return { includeSpellIDs = ids, excludeSpellIDs = {} }
+end
+
+function TacticalUnitBoard.setBuffOverlayAlpha(cell, alpha)
+    local acVal = cell and cell.buffAuraContainer
+    if acVal then
+        pcall(acVal.SetAlpha, acVal, alpha)
+    end
+end
+
+-- name / class colour / size on the "present" buttons; only touched when something changed
+function TacticalUnitBoard.syncBuffOverlayParts(cell)
+    if not cell or not cell._ezscBuffParts then return end
+    local shortName = cell._ezscBuffShortName or ""
+    local c = cell._ezscBuffClassColor or { r = ACCENT_R, g = ACCENT_G, b = ACCENT_B }
+    local showName = ns:GetCellSize() > ns.SMALL_CELL_SIZE
+    for _, part in ipairs(cell._ezscBuffParts) do
+        if part.shownName ~= shortName then
+            if pcall(part.name.SetText, part.name, shortName) then part.shownName = shortName end
+        end
+        if part.shownColor ~= c then
+            if pcall(part.bar.SetColorTexture, part.bar, c.r, c.g, c.b, 1) then part.shownColor = c end
+        end
+        if part.nameShown ~= showName then
+            if pcall(part.name.SetShown, part.name, showName) then part.nameShown = showName end
+        end
+    end
+end
+
+function ns:ConfigureBuffCellAuraContainer(cell, unit, buffDef)
+    if not cell or not unit then return end
+    if InCombatLockdown and InCombatLockdown() then return end
+
+    local acVal = cell.buffAuraContainer
+    if not acVal then
+        if cell._ezscBuffContainerFailed then return end
+        -- an empty spell list might match every buff, so the container is only made
+        -- once there is a buff to follow
+        local firstFilter = buildBuffOverlayFilter(buffDef)
+        if not firstFilter then return end
+
+        TacticalUnitBoard.prepareAuraContainerLoaded()
+        local okAC, made = pcall(CreateFrame, "AuraContainer", nil, cell, "CustomAuraContainerTemplate")
+        if not okAC or not made or type(made.AddAuraSlot) ~= "function" then
+            cell._ezscBuffContainerFailed = true
+            return
+        end
+        made:EnableMouse(false)
+        made:SetAllPoints(cell)
+        made:SetAlpha(0)
+        cell._ezscBuffParts = {}
+
+        local okSlot = pcall(made.AddAuraSlot, made, BUFF_OVERLAY_SLOT, "HELPFUL", {
+            sortMethod = 0,
+            sortDirection = 0,
+            candidateFilters = firstFilter,
+            initializeFrame = function(ab)
+                ab:EnableMouse(false)
+                ab:ClearAllPoints()
+                ab:SetAllPoints(cell)
+                ab:SetFrameLevel(cell:GetFrameLevel() + 12)
+
+                -- same look as the cell's own "buff OK" state
+                local border = ab:CreateTexture(nil, "BACKGROUND")
+                border:SetAllPoints(ab)
+                border:SetColorTexture(0.17, 0.22, 0.26, 0.90)
+
+                local icon = ab:CreateTexture(nil, "ARTWORK", nil, 0)
+                icon:SetPoint("TOPLEFT", ab, "TOPLEFT", 2, -2)
+                icon:SetPoint("BOTTOMRIGHT", ab, "BOTTOMRIGHT", -2, 2)
+                icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+                if ab.SetIcon then
+                    ab:SetIcon(icon)
+                end
+
+                local tint = ab:CreateTexture(nil, "ARTWORK", nil, 1)
+                tint:SetPoint("TOPLEFT", ab, "TOPLEFT", 2, -2)
+                tint:SetPoint("BOTTOMRIGHT", ab, "BOTTOMRIGHT", -2, 2)
+                tint:SetColorTexture(0.06, 0.09, 0.12, 0.78)
+
+                local textLevelHost = ab
+                if ab.SetDurationCooldown then
+                    local okCD, cd = pcall(CreateFrame, "Cooldown", nil, ab, "CooldownFrameTemplate")
+                    if okCD and cd then
+                        cd:SetPoint("TOPLEFT", ab, "TOPLEFT", 2, -2)
+                        cd:SetPoint("BOTTOMRIGHT", ab, "BOTTOMRIGHT", -2, 2)
+                        if cd.SetDrawEdge then cd:SetDrawEdge(false) end
+                        if cd.SetReverse then cd:SetReverse(true) end
+                        if cd.SetHideCountdownNumbers then cd:SetHideCountdownNumbers(true) end
+                        cd:EnableMouse(false)
+                        pcall(ab.SetDurationCooldown, ab, cd)
+                        -- name and badge stay above the swipe
+                        local textHost = CreateFrame("Frame", nil, ab)
+                        textHost:SetAllPoints(ab)
+                        textHost:EnableMouse(false)
+                        textHost:SetFrameLevel(cd:GetFrameLevel() + 1)
+                        textLevelHost = textHost
+                    end
+                end
+
+                local c = cell._ezscBuffClassColor or { r = ACCENT_R, g = ACCENT_G, b = ACCENT_B }
+                local classBar = textLevelHost:CreateTexture(nil, "OVERLAY")
+                classBar:SetPoint("TOPLEFT", ab, "TOPLEFT", 2, -2)
+                classBar:SetPoint("TOPRIGHT", ab, "TOPRIGHT", -2, -2)
+                classBar:SetHeight(3)
+                classBar:SetColorTexture(c.r, c.g, c.b, 1)
+
+                local shortName = cell._ezscBuffShortName or ""
+                local showName = ns:GetCellSize() > ns.SMALL_CELL_SIZE
+                local nameText = textLevelHost:CreateFontString(nil, "OVERLAY")
+                nameText:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+                nameText:SetPoint("TOPLEFT", ab, "TOPLEFT", 1, -5)
+                nameText:SetPoint("TOPRIGHT", ab, "TOPRIGHT", -1, -5)
+                nameText:SetJustifyH("CENTER")
+                nameText:SetWordWrap(false)
+                nameText:SetTextColor(unpack(STYLE.textMain))
+                nameText:SetText(shortName)
+                nameText:SetShown(showName)
+
+                local badgeText = textLevelHost:CreateFontString(nil, "OVERLAY")
+                badgeText:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
+                badgeText:SetPoint("BOTTOMLEFT", ab, "BOTTOMLEFT", 1, 2)
+                badgeText:SetPoint("BOTTOMRIGHT", ab, "BOTTOMRIGHT", -1, 2)
+                badgeText:SetJustifyH("CENTER")
+                badgeText:SetWordWrap(false)
+                badgeText:SetTextColor(ACCENT_R, ACCENT_G, ACCENT_B)
+                badgeText:SetText(ns:L("BADGE_BUFF_OK"))
+
+                cell._ezscBuffParts = cell._ezscBuffParts or {}
+                table.insert(cell._ezscBuffParts, {
+                    name = nameText, bar = classBar,
+                    shownName = shortName, shownColor = c, nameShown = showName,
+                })
+            end,
+        })
+        if not okSlot then
+            pcall(made.SetEnabled, made, false)
+            pcall(made.SetShown, made, false)
+            cell._ezscBuffContainerFailed = true
+            return
+        end
+
+        pcall(made.SetUnit, made, unit)
+        pcall(made.SetShown, made, true)
+        pcall(made.SetEnabled, made, true)
+        cell.buffAuraContainer = made
+        cell._ezscBuffUnit = unit
+        cell._ezscBuffFilterKey = buffDef.key
+        return
+    end
+
+    local wantKey = buffDef and buffDef.key
+    if wantKey and cell._ezscBuffFilterKey ~= wantKey then
+        local newFilter = buildBuffOverlayFilter(buffDef)
+        local okF = newFilter and acVal.SetAuraSlotCandidateFilters
+            and pcall(acVal.SetAuraSlotCandidateFilters, acVal, BUFF_OVERLAY_SLOT, newFilter)
+        -- unknown key = the overlay is not used until a filter could be set
+        cell._ezscBuffFilterKey = okF and wantKey or nil
+    end
+    if cell._ezscBuffUnit ~= unit then
+        pcall(acVal.SetUnit, acVal, unit)
+        pcall(acVal.SetShown, acVal, true)
+        pcall(acVal.SetEnabled, acVal, true)
+        cell._ezscBuffUnit = unit
     end
 end
 
@@ -977,6 +1177,10 @@ function TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, frameName, sect
 
     b:SetScript("OnMouseWheel", function(self, delta)
         if not IsControlKeyDown() then return end
+        if self.sectionRole == "BUFF" and self.unit and InCombatLockdown and InCombatLockdown() then
+            if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_COMBAT_BLOCKED")) end
+            return
+        end
         if self.sectionRole == "BUFF" and self.unit then
             if ns:CycleUnitLeftClickBuff(self.unit, delta) then
                 TacticalUnitBoard.presentCellTooltip(self, true)
@@ -1149,7 +1353,11 @@ function ns:BuildTacticalUnitBoard()
     end)
 
     unitBoardFrame.lockBtn = buildToolbarControl("EzBCLockButton", "unlock", -32, "LOCK_TIP", function()
-        if not EzWoW_SpellControlDB or (InCombatLockdown and InCombatLockdown()) then return end
+        if not EzWoW_SpellControlDB then return end
+        if InCombatLockdown and InCombatLockdown() then
+            if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_COMBAT_BLOCKED")) end
+            return
+        end
         EzWoW_SpellControlDB.lockBoard = not EzWoW_SpellControlDB.lockBoard
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
@@ -1579,6 +1787,7 @@ function ns:UpdateSingleUnitCellVisualOnly(cell)
 
     if not state or not state.exists then
         if cell.auraContainer then cell.auraContainer:SetAlpha(0) end
+        TacticalUnitBoard.setBuffOverlayAlpha(cell, 0)
         TacticalUnitBoard.assignSlotEmptyState(cell)
         return
     end
@@ -1670,6 +1879,20 @@ function ns:UpdateSingleUnitCellVisualOnly(cell)
     end
     TacticalUnitBoard.fitFontStringToWidth(cell.nameText, shortName, size - 4, 10, 7)
 
+    -- the buff this cell is about; out of combat the overlay is only kept in step
+    -- (hidden), in combat it shows the live "present" state over a "missing" base
+    local aboutChoice = state.primaryMissingBuff or state.slot1Choice
+    local aboutDef = aboutChoice and aboutChoice.buffDef
+    local inCombat = InCombatLockdown and InCombatLockdown()
+    cell._ezscBuffShortName, cell._ezscBuffClassColor = shortName, classColor
+    if not inCombat then
+        self:ConfigureBuffCellAuraContainer(cell, cell.unit, aboutDef)
+    end
+    TacticalUnitBoard.syncBuffOverlayParts(cell)
+    local liveOverlay = inCombat and aboutDef and cell.buffAuraContainer
+        and cell._ezscBuffFilterKey == aboutDef.key and cell._ezscBuffUnit == cell.unit
+    TacticalUnitBoard.setBuffOverlayAlpha(cell, (liveOverlay and state.isConnected and not state.isDead) and 1 or 0)
+
     if not state.isConnected then
         cell.icon:SetTexture(DEFAULT_SLOT_ICON)
         cell.icon:SetDesaturated(true)
@@ -1698,8 +1921,13 @@ function ns:UpdateSingleUnitCellVisualOnly(cell)
         state.inRangeRaw, state.inRangeSecret
     )
 
-    if state.primaryMissingBuff then
-        local mbVal = state.primaryMissingBuff
+    -- with the live overlay the base always shows "missing"; the overlay covers it
+    -- while the buff is really there
+    local mbVal = state.primaryMissingBuff
+    if liveOverlay then
+        mbVal = aboutChoice
+    end
+    if mbVal then
         cell.icon:SetTexture((mbVal.buffDef and mbVal.buffDef.icon) or DEFAULT_SLOT_ICON)
         cell.innerBg:SetColorTexture(0.18, 0.14, 0.04, 0.58)
         TacticalUnitBoard.assignCellActiveEdges(cell, true, STYLE.gold[1], STYLE.gold[2], STYLE.gold[3])

@@ -918,8 +918,8 @@ NS.CLASS_CCS = {
             key = "TURN_UNDEAD",
             priority = 1,
             breakMode = "CHANCE",
-            allowedTypes = { UNDEAD = true, DEMON = true },
-            allowedTypeKeys = { "CTYPE_UNDEAD", "CTYPE_DEMON" },
+            allowedTypes = { UNDEAD = true },
+            allowedTypeKeys = { "CTYPE_UNDEAD" },
             ranks = {
                 RCC(2878,  1, 24, 10),
                 RCC(5627,  2, 38, 15),

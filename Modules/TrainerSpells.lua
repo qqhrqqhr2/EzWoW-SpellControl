@@ -4,6 +4,71 @@
 --                             Level-up Notice & Spell Tooltip Rank Hints
 --===========================================================================
 local ADDON_NAME, ns = ...
+
+-- The "EzWoW - ..." name line at the end of tooltip additions is drawn small.
+-- Shared by the EzWoW addons: the first one loaded sets it up.
+if not (_G.EzWoWTooltipTagSizer and _G.EzWoWTooltipTagSizer.version == 3) then
+    local sizer = {}
+    sizer.version = 3
+    _G.EzWoWTooltipTagSizer = sizer
+    local smallFont
+    local original = setmetatable({}, { __mode = "k" })   -- font string -> its own font object
+    local function tagFont()
+        if not smallFont and CreateFont then
+            smallFont = _G.EzWoWTooltipTagFont or CreateFont("EzWoWTooltipTagFont")
+            smallFont:CopyFontObject(GameTooltipTextSmall or GameTooltipText)
+            local path, _, flags = smallFont:GetFont()
+            if path then smallFont:SetFont(path, 8, flags) end
+        end
+        return smallFont
+    end
+    local function isTag(text)
+        if type(text) ~= "string" or (issecretvalue and issecretvalue(text)) then return false end
+        return text:find("^EzWoW %- ") ~= nil
+    end
+    local function fit(fs, tag)
+        if not fs then return end
+        if tag then
+            if not original[fs] then original[fs] = fs:GetFontObject() or GameTooltipText end
+            if tagFont() then fs:SetFontObject(smallFont) end
+            fs:SetTextColor(0.5, 0.5, 0.5)
+        elseif original[fs] then
+            fs:SetFontObject(original[fs])
+            original[fs] = nil
+        end
+    end
+    function sizer.Refit(tip)
+        local name = tip and tip.GetName and tip:GetName()
+        if type(name) ~= "string" then return end
+        local ok, count = pcall(tip.NumLines, tip)
+        if not ok or type(count) ~= "number" or (issecretvalue and issecretvalue(count)) then return end
+        for i = 1, count do
+            local right = _G[name .. "TextRight" .. i]
+            if right then fit(right, isTag(right:GetText())) end
+            -- line 1 is the tooltip's title: a left "EzWoW - ..." there stays big
+            local left = _G[name .. "TextLeft" .. i]
+            if left then fit(left, i > 1 and isTag(left:GetText())) end
+        end
+    end
+    local function restore(tip)
+        local name = tip and tip.GetName and tip:GetName()
+        if type(name) ~= "string" then return end
+        local rightPrefix, leftPrefix = name .. "TextRight", name .. "TextLeft"
+        for fs, font in pairs(original) do
+            local fsName = fs.GetName and fs:GetName()
+            if type(fsName) == "string" and (fsName:find(rightPrefix, 1, true) == 1 or fsName:find(leftPrefix, 1, true) == 1) then
+                fs:SetFontObject(font)
+                original[fs] = nil
+            end
+        end
+    end
+    for _, tip in ipairs({ GameTooltip, ItemRefTooltip, ShoppingTooltip1, ShoppingTooltip2 }) do
+        if tip then
+            pcall(hooksecurefunc, tip, "Show", function(self) pcall(sizer.Refit, self) end)
+            pcall(tip.HookScript, tip, "OnTooltipCleared", function(self) pcall(restore, self) end)
+        end
+    end
+end
 local type, pairs, ipairs, tonumber, tostring, select, pcall = type, pairs, ipairs, tonumber, tostring, select, pcall
 
 local TrainerSpells = ns.TrainerSpells or {}
@@ -587,6 +652,19 @@ local function isDecoratableTooltip(tip)
     return true
 end
 
+-- Attribution line under this addon's line: once per tooltip display.
+local taggedTooltips = setmetatable({}, { __mode = "k" })
+local tagClearHooked = setmetatable({}, { __mode = "k" })
+local function tagTooltip(tip)
+    if taggedTooltips[tip] or type(tip.AddDoubleLine) ~= "function" then return end
+    if not tagClearHooked[tip] and type(tip.HookScript) == "function" then
+        tagClearHooked[tip] = true
+        pcall(tip.HookScript, tip, "OnTooltipCleared", function(self) taggedTooltips[self] = nil end)
+    end
+    taggedTooltips[tip] = true
+    tip:AddDoubleLine(" ", ns:L("ADDON_TITLE"), 0, 0, 0, 0.5, 0.5, 0.5)
+end
+
 local function decorateSpellTooltip(tip, spellID)
     spellID = plain(spellID)
     if type(spellID) ~= "number" or not isDecoratableTooltip(tip) then return end
@@ -611,6 +689,7 @@ local function decorateSpellTooltip(tip, spellID)
             if matches then
                 if not TrainerSpells.IsEntryLearned(entry, data) then
                     tip:AddLine(string.format(ns:L("SBL_TIP_LEARN_AT"), tonumber(entry.level) or 1), 0.361, 0.878, 0.722)
+                    tagTooltip(tip)
                     if tip.Show then tip:Show() end
                 end
                 return
@@ -628,6 +707,7 @@ local function decorateSpellTooltip(tip, spellID)
     end
     if best then
         tip:AddLine(string.format(ns:L("SBL_TIP_NEXT"), best.num, best.level), 0.361, 0.878, 0.722)
+        tagTooltip(tip)
         if tip.Show then tip:Show() end
     end
 end

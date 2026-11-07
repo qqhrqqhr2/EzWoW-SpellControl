@@ -63,7 +63,9 @@ local function makeCloseButton(parent, onClick)
         if self.tipKey and GameTooltip then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText(ns:L(self.tipKey), ACCENT_R, ACCENT_G, ACCENT_B, 1, true)
+            GameTooltip:AddDoubleLine(" ", "EzWoW - Spell Control", 0, 0, 0, 0.5, 0.5, 0.5)
             GameTooltip:Show()
+            if _G.EzWoWTooltipTagSizer and _G.EzWoWTooltipTagSizer.Refit then pcall(_G.EzWoWTooltipTagSizer.Refit, GameTooltip) end
         end
     end)
     close:SetScript("OnLeave", function(self)
@@ -97,7 +99,9 @@ local function rowOnEnter(row)
     elseif data.availableNow then
         GameTooltip:AddLine(ns:L("SBL_AVAILABLE"), ACCENT_R, ACCENT_G, ACCENT_B)
     end
+    GameTooltip:AddDoubleLine(" ", "EzWoW - Spell Control", 0, 0, 0, 0.5, 0.5, 0.5)
     GameTooltip:Show()
+    if _G.EzWoWTooltipTagSizer and _G.EzWoWTooltipTagSizer.Refit then pcall(_G.EzWoWTooltipTagSizer.Refit, GameTooltip) end
 end
 
 local function rowOnLeave()

@@ -29,11 +29,13 @@
 Core\Locales.lua
 Core\UIKit.lua
 Data\Spells.lua
+Data\TalentBuilds.lua
 Core\Init.lua
 Modules\SpellScanner.lua
 Modules\SecureAttributes.lua
 Modules\SpellUprank.lua
 Modules\TrainerSpells.lua
+Modules\TalentBuilds.lua
 UI\MicroBoard.lua
 UI\LanguageDropdown.lua
 UI\SpellsByLevel.lua

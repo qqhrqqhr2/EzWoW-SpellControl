@@ -317,7 +317,7 @@ local lKokr = {
     OPT_SPELL_UPRANK = "새 주문 랭크를 배우면 단축바의 낮은 랭크를 자동 교체",
     MSG_UPRANK = "%s: 단축바 %d칸을 새 랭크(%d)로 바꿨어요",
     OPT_TRACK_SECOND_BUFF = "보조 버프(가시·정신력·내면의 열정·갑옷 등) 빠짐도 표시",
-    OPT_PREFER_GROUP_BUFF = "파티 전체 버프(선물·총명함·기원·상급 축복) 우선 사용",
+    OPT_PREFER_GROUP_BUFF = "파티 전체 버프(선물·총명함·기원) 우선 사용",
     OPT_SOUND_ALERT = "해제할 디버프가 걸리면 알림음 재생",
     OPT_SHOW_SOLO = "혼자 있을 때(솔플)도 내 캐릭터 표시",
     OPT_SHOW_TARGET = "파티원이 아닌 우호적 대상 선택 시 표시",
@@ -561,6 +561,9 @@ local lDede = {
     SBL_TIP_NEXT = "Nächster Rang: Rang %d · Stufe %d",
     SBL_TIP_LEARN_AT = "Erlernbar ab Stufe: %d",
     SBL_TOGGLE_TIP = "Einklappen / ausklappen",
+    MSG_COMBAT_BLOCKED = "Im Kampf nicht möglich. Nach dem Kampf erneut versuchen.",
+    MSG_AFTER_COMBAT = "Diese Änderung gilt nach dem Kampf.",
+    MSG_HELP = "Befehle: /ezsc (Einstellungen) · /ezsc toggle (Fenster) · /ezsc lock (sperren) · /ezsc reset (Position) · /ezsc spells (Zauber nach Stufe)",
 }
 
 local lFrfr = {
@@ -731,6 +734,9 @@ local lFrfr = {
     SBL_TIP_NEXT = "Rang suivant : rang %d · niv. %d",
     SBL_TIP_LEARN_AT = "Apprenable au niveau : %d",
     SBL_TOGGLE_TIP = "Replier / déplier",
+    MSG_COMBAT_BLOCKED = "Impossible en combat. Réessayez après le combat.",
+    MSG_AFTER_COMBAT = "Ce changement s'appliquera après le combat.",
+    MSG_HELP = "Commandes : /ezsc (réglages) · /ezsc toggle (fenêtre) · /ezsc lock (verrou) · /ezsc reset (position) · /ezsc spells (sorts par niveau)",
 }
 
 local lEses = {
@@ -901,6 +907,9 @@ local lEses = {
     SBL_TIP_NEXT = "Siguiente rango: rango %d · nv. %d",
     SBL_TIP_LEARN_AT = "Se aprende al nivel: %d",
     SBL_TOGGLE_TIP = "Contraer / expandir",
+    MSG_COMBAT_BLOCKED = "No disponible en combate. Inténtalo al terminar.",
+    MSG_AFTER_COMBAT = "Este cambio se aplicará al terminar el combate.",
+    MSG_HELP = "Comandos: /ezsc (ajustes) · /ezsc toggle (ventana) · /ezsc lock (bloquear) · /ezsc reset (posición) · /ezsc spells (hechizos por nivel)",
 }
 
 local lRuru = {
@@ -1071,6 +1080,9 @@ local lRuru = {
     SBL_TIP_NEXT = "Следующий ранг: ранг %d · ур. %d",
     SBL_TIP_LEARN_AT = "Можно изучить на уровне: %d",
     SBL_TOGGLE_TIP = "Свернуть / развернуть",
+    MSG_COMBAT_BLOCKED = "Недоступно в бою. Повторите после боя.",
+    MSG_AFTER_COMBAT = "Изменение вступит в силу после боя.",
+    MSG_HELP = "Команды: /ezsc (настройки) · /ezsc toggle (окно) · /ezsc lock (закрепить) · /ezsc reset (позиция) · /ezsc spells (заклинания по уровням)",
 }
 
 local lZhcn = {
@@ -1177,7 +1189,7 @@ local lZhcn = {
     OPT_SPELL_UPRANK = "学会新等级时自动替换动作条上的低等级法术",
     MSG_UPRANK = "%s：已将动作条上 %d 个位置替换为等级 %d",
     OPT_TRACK_SECOND_BUFF = "同时检查辅助增益 (荆棘术·精神·心灵之火·护甲等)",
-    OPT_PREFER_GROUP_BUFF = "优先使用团队/群体增益 (野性赐福·奥术光辉·强效祝福等)",
+    OPT_PREFER_GROUP_BUFF = "优先使用团队/群体增益 (野性赐福·奥术光辉等)",
     OPT_SOUND_ALERT = "出现可驱散减益时播放提示音",
     OPT_SHOW_SOLO = "单人(独狼)时也显示自己",
     OPT_SHOW_TARGET = "选中非小队友善目标时显示",
@@ -1241,6 +1253,9 @@ local lZhcn = {
     SBL_TIP_NEXT = "下一等级: 等级 %d · %d 级",
     SBL_TIP_LEARN_AT = "可学习等级: %d",
     SBL_TOGGLE_TIP = "折叠 / 展开",
+    MSG_COMBAT_BLOCKED = "战斗中无法使用，请在战斗结束后再试。",
+    MSG_AFTER_COMBAT = "此更改将在战斗结束后生效。",
+    MSG_HELP = "命令：/ezsc（设置）· /ezsc toggle（窗口）· /ezsc lock（锁定）· /ezsc reset（位置）· /ezsc spells（按等级的技能）",
 }
 
 local lZhtw = {
@@ -1347,7 +1362,7 @@ local lZhtw = {
     OPT_SPELL_UPRANK = "學會新等級時自動替換快捷列上的低等級法術",
     MSG_UPRANK = "%s：已將快捷列上 %d 個位置替換為等級 %d",
     OPT_TRACK_SECOND_BUFF = "同時檢查輔助增益 (荊棘術·精神·心靈之火·護甲等)",
-    OPT_PREFER_GROUP_BUFF = "優先使用團隊/群體增益 (野性賜福·奧術光輝·強效祝福等)",
+    OPT_PREFER_GROUP_BUFF = "優先使用團隊/群體增益 (野性賜福·奧術光輝等)",
     OPT_SOUND_ALERT = "出現可驅散減益時播放提示音",
     OPT_SHOW_SOLO = "單人時也顯示自己",
     OPT_SHOW_TARGET = "選取非小隊友善目標時顯示",
@@ -1411,6 +1426,9 @@ local lZhtw = {
     SBL_TIP_NEXT = "下一等級: 等級 %d · %d 級",
     SBL_TIP_LEARN_AT = "可學習等級: %d",
     SBL_TOGGLE_TIP = "收合 / 展開",
+    MSG_COMBAT_BLOCKED = "戰鬥中無法使用，請在戰鬥結束後再試。",
+    MSG_AFTER_COMBAT = "此變更將在戰鬥結束後生效。",
+    MSG_HELP = "指令：/ezsc（設定）· /ezsc toggle（視窗）· /ezsc lock（鎖定）· /ezsc reset（位置）· /ezsc spells（依等級的技能）",
 }
 
 ns.Locales.enUS = lEnus

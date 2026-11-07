@@ -383,6 +383,9 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
             ns:RefreshSettingsTexts()
         end
     elseif event == "GROUP_ROSTER_UPDATE" then
+        -- "party2" / "raid5" may be someone else now
+        if ns.unitWheelBuffKey then wipe(ns.unitWheelBuffKey) end
+        if ns.unitWheelBuffWasActive then wipe(ns.unitWheelBuffWasActive) end
         ns:ScanCCTargetState()
         if InCombatLockdown and InCombatLockdown() then
             ns.pendingSecureUpdate = true
