@@ -19,13 +19,15 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 직업 기술 전문가를 한 번 열면 **레벨별로 배울 주문과 비용**을 저장해 두고, 별도 창(`/ezsc spells`) · 주문책 옆 패널 · 주문 툴팁 · 레벨업 알림으로 알려 줍니다.
 
+특성 창에는 **추천 특성** 단추가 붙습니다. 직업별 추천 빌드를 고르면 남은 특성 포인트를 빌드 순서대로 넣어 줍니다(`/추천특성`).
+
 ### 화면 미리보기
 
 ![전술 보드와 레벨별 배울 스킬](docs/images/ui_ko.png)
 
 ![설정창](docs/images/settings_ko.png)
 
-> 이미지는 애드온 코드의 창 크기 · 좌표 · 색상 · 문구로 재현한 **예시 화면**(사제 예시)입니다. 전술 보드는 칸 크기 40으로 그렸고, 파티원 이름은 지어낸 예시입니다.
+> 이미지는 애드온 코드의 창 크기 · 좌표 · 색상 · 문구로 재현한 **예시 화면**(사제 예시)입니다. 전술 보드는 칸 크기 40으로 그렸고, 파티원 이름은 지어낸 예시입니다. 주문책과 특성 창은 테두리만 단순하게 그렸습니다.
 
 ### 설치
 
@@ -45,6 +47,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 | ④ | 레벨별 배울 스킬 (`/ezsc spells`) | 직업 기술 전문가 창을 열 때 저장한 목록을 레벨별로 보여 줍니다. **지금 배울 수 있는 주문**은 강조색, 이미 배운 주문은 흐리게 체크 표시, 오른쪽은 비용입니다. 위쪽에 지금 배울 수 있는 주문 수와 합계 비용, 제목 아래에 마지막 전문가 방문 시각이 나옵니다. |
 | ⑤ | 주문책 옆 패널 | 주문책을 열면 같은 목록이 주문책 오른쪽에 붙습니다(줄마다 `Lv`). `<` 단추로 접고 `>`로 다시 펼칩니다. |
 | ⑥ | 레벨업 알림 | 레벨이 오르면 새로 배울 수 있는 주문 수를 채팅창에 알려 줍니다(전투 중이면 전투가 끝난 뒤). |
+| ⑦ | 추천 특성 (`/추천특성`) | 특성 창 검색창 왼쪽의 **추천 특성** 단추를 누르면 내 직업의 빌드 목록(`전문화 (역할)  분배`)이 나옵니다. 하나를 고르면 남은 포인트를 넣고, **적용할지 한 번 더 묻습니다**. |
 
 #### 클릭 조작
 
@@ -63,6 +66,15 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 - **단체 버프 우선**: 야생의 선물, 신비한 총명함, 천상의 기원 등을 배웠다면 먼저 쓰도록 할 수 있습니다.
 - **만료 임박**: 남은 시간이 설정값(기본 3분)보다 짧은 버프는 빠진 것으로 보고 미리 다시 걸 수 있게 합니다.
 - **랭크 자동 교체**: 새 랭크를 배우면 단축바에 있는 낮은 랭크를 새 랭크로 바꿉니다.
+- **전투 중 버프 상태**: 전투 중에도 버프 칸은 버프가 다시 걸리면 바로 `완료`로 바뀌고, 풀리면 다시 빠진 상태로 보입니다.
+
+#### 추천 특성
+
+- 특성 창을 열면 검색창 왼쪽에 **추천 특성** 단추가 생깁니다. `/추천특성`(`/eztalent`)으로 어디서나 같은 메뉴를 열 수 있습니다.
+- 메뉴에는 내 직업의 1~60레벨 빌드가 나옵니다(예: `암흑 (딜러)  16/3/32`). 전문화마다 하나씩, 직업마다 3개이고 드루이드는 4개(야성 딜러 · 탱커 따로)입니다.
+- 빌드를 고르면 남은 포인트를 빌드 순서대로 넣은 뒤 **적용 / 취소**를 묻습니다. 취소하면 넣은 포인트를 되돌립니다.
+- 레벨업 중에는 레벨이 오를 때마다 다시 누르면 이어서 찍습니다. 빌드에 없는 특성에 이미 포인트가 있으면 채팅창에 알려 줍니다.
+- 전투 중에는 특성을 바꿀 수 없습니다.
 
 ### 설정창 (`/ezsc`)
 
@@ -95,6 +107,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 | `/ezsc lock` | 보드 잠금/해제 |
 | `/ezsc reset` | 보드 위치 · 크기와 섹션 순서 초기화 (전투 중이 아닐 때) |
 | `/ezsc help` | 명령어 안내 |
+| `/추천특성` (`/eztalent`) | 추천 특성 메뉴 열기 |
 
 ### 저장 데이터
 
@@ -102,7 +115,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 ### 알아두면 좋은 점
 
-- 보안 주문 버튼을 쓰기 때문에 **전투 중에는 칸 구성이 바뀌지 않습니다**. 전투가 끝나면 자동으로 다시 정리됩니다.
+- 보안 주문 버튼을 쓰기 때문에 **전투 중에는 칸 구성이 바뀌지 않습니다**(버프 칸의 `완료` 표시는 전투 중에도 바뀝니다). 전투가 끝나면 자동으로 다시 정리됩니다.
 - 패시브 주문은 읽지 않습니다. 새 주문을 배웠는데 안 보이면 **새로고침**을 누르세요.
 - 레벨별 배울 스킬 목록은 **직업 기술 전문가를 한 번 열어야** 채워집니다. 전문가를 다시 열 때마다 새로 저장합니다.
 
@@ -116,13 +129,15 @@ A small tactical board that lets you **buff missing members, cleanse debuffs and
 
 Open your class trainer once and it saves **the spells you can learn at each level and their cost**, shown in a window (`/ezsc spells`), a panel next to the spellbook, spell tooltips and a level-up notice.
 
+The talent window gets a **Recommended** button: pick a recommended build for your class and your free talent points are spent in the build's order (`/eztalent`).
+
 ### Screenshots
 
 ![Tactical board and spells by level](docs/images/ui_en.png)
 
 ![Settings window](docs/images/settings_en.png)
 
-> These are **mock-ups** (Priest example) rebuilt from the window sizes, coordinates, colours and strings in the code. The board is drawn with cell size 40; party names are made up.
+> These are **mock-ups** (Priest example) rebuilt from the window sizes, coordinates, colours and strings in the code. The board is drawn with cell size 40; party names are made up. The spellbook and talent window are drawn as simple outlines.
 
 ### Installation
 
@@ -142,6 +157,7 @@ Open your class trainer once and it saves **the spells you can learn at each lev
 | ④ | Spells by level (`/ezsc spells`) | The list saved from your class trainer, grouped by level. **Spells you can learn now** are highlighted, learned ones are faded with a check, the cost is on the right. The top line shows how many you can learn now and the total cost; the title shows your last trainer visit. |
 | ⑤ | Spellbook panel | Opening the spellbook docks the same list on its right (with `Lv` on each row). Fold it with `<`, unfold with `>`. |
 | ⑥ | Level-up notice | On level-up, chat tells you how many new spells you can learn (after combat if you are fighting). |
+| ⑦ | Recommended talents (`/eztalent`) | The **Recommended** button left of the talent search box lists your class's builds (`Spec (Role)  split`). Pick one to spend your free points; **you are asked once more before they are applied**. |
 
 #### Click controls
 
@@ -160,6 +176,15 @@ Badges: `Range` out of range · `OK` buff active · `OFF` offline · `DEAD` dead
 - **Prefer group buffs**: optionally use Gift of the Wild, Arcane Brilliance, Prayer of Fortitude, … first when learned.
 - **Expiring soon**: buffs with less time left than the setting (3 minutes by default) count as missing, so you can renew them early.
 - **Rank replacement**: after you learn a new rank, lower ranks on your action bars are swapped for it.
+- **Buff state in combat**: buff cells switch to `OK` as soon as the buff is back on, even in combat, and show as missing again when it falls off.
+
+#### Recommended talents
+
+- Opening the talent window adds a **Recommended** button left of its search box. `/eztalent` (`/추천특성`) opens the same menu anywhere.
+- The menu lists level 1–60 builds for your class (e.g. `Shadow (DPS)  16/3/32`): one per spec, three per class, four for druids (Feral DPS and Feral tank are separate).
+- Pick a build: your free points are spent in the build's order, then you choose **Apply / Cancel**. Cancel takes the placed points back.
+- While leveling, click again after each level to continue. If points already sit in talents outside the build, chat tells you.
+- Talents cannot be changed in combat.
 
 ### Settings window (`/ezsc`)
 
@@ -192,6 +217,7 @@ Badges: `Range` out of range · `OK` buff active · `OFF` offline · `DEAD` dead
 | `/ezsc lock` | Lock/unlock the board |
 | `/ezsc reset` | Reset board position, size and section order (out of combat) |
 | `/ezsc help` | List the commands |
+| `/eztalent` (`/추천특성`) | Open the recommended talents menu |
 
 ### Saved data
 
@@ -199,7 +225,7 @@ Badges: `Range` out of range · `OK` buff active · `OFF` offline · `DEAD` dead
 
 ### Tips
 
-- The board uses secure spell buttons, so **its cells cannot change during combat**; it refreshes when combat ends.
+- The board uses secure spell buttons, so **its cells cannot change during combat** (the `OK` state of buff cells still updates); it refreshes when combat ends.
 - Passive spells are ignored. If a newly learned spell does not appear, press **Refresh**.
 - The spells-by-level list fills in after you **open your class trainer once**; each visit saves it again.
 

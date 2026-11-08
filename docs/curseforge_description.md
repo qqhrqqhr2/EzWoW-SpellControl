@@ -1,12 +1,13 @@
 <!--
-CurseForge summary (EN): One-click party buffs, debuff cleanse and enemy crowd control, plus the spells you can learn at each level with costs, rank hints in spell tooltips and a level-up notice.
+CurseForge summary (EN): One-click party buffs, debuff cleanse and enemy crowd control, plus spells to learn at each level with costs, rank hints in tooltips and recommended talent builds.
+CurseForge summary (KO): 파티 버프 · 디버프 해제 · 적 대상 메즈를 클릭 한 번으로. 레벨별로 배울 주문과 비용, 툴팁 랭크 안내, 직업별 추천 특성까지.
 -->
 
 # EzWoW - Spell Control
 
 **English** · [한국어](#한국어)
 
-A small tactical board for WoW Forever: **buff missing members, cleanse debuffs and crowd-control enemies with one click**. It reads only the active spells you have learned and shows just the units that need something. It also keeps track of **the spells you can learn at each level** after you visit your class trainer.
+A small tactical board for WoW Forever: **buff missing members, cleanse debuffs and crowd-control enemies with one click**. It reads only the active spells you have learned and shows just the units that need something. It also keeps track of **the spells you can learn at each level** after you visit your class trainer, and adds **recommended talent builds** to the talent window.
 
 ![Tactical board and spells by level](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/ui_en.png)
 
@@ -21,6 +22,7 @@ A small tactical board for WoW Forever: **buff missing members, cleanse debuffs 
 - **Cleanse**: members with a debuff you can remove appear at once with a sound; the border colour shows the debuff type, and a running Abolish effect shows `Active`.
 - **Crowd control**: target an enemy and the board offers the CC that works on its creature type and range (left / right / Ctrl + left-click).
 - Smart choices: class-aware buffs, auto-downranking for low-level members, optional group buffs first, buffs about to expire count as missing.
+- Buff cells switch to `OK` as soon as the buff is back on, even in combat.
 - Raid groups you look after, separate party and raid cell sizes, lock, fold, reorder sections, show only on mouseover.
 
 ### Spells by level
@@ -31,12 +33,18 @@ A small tactical board for WoW Forever: **buff missing members, cleanse debuffs 
 - On level-up, chat tells you how many new spells you can learn.
 - Optional: after learning a new rank, lower ranks on your action bars are replaced.
 
+### Recommended talents
+- A **Recommended** button on the talent window lists level 1–60 builds for your class, one per spec (e.g. `Shadow (DPS)  16/3/32`).
+- Pick one and your free points are spent in the build's order; you are asked once more before they are applied, and Cancel takes them back.
+- While leveling, click again after each level to continue.
+
 ## Commands
 - `/ezsc` (`/spellcontrol`, `/스펠컨트롤`) — settings
 - `/ezsc spells` — spells by level
 - `/ezsc toggle` — show or hide the board
 - `/ezsc lock` — lock or unlock the board
 - `/ezsc reset` — reset the board position, size and section order
+- `/eztalent` (`/추천특성`) — recommended talents menu
 
 The board uses secure spell buttons, so its cells do not change during combat; it tidies up when combat ends.
 
@@ -46,7 +54,7 @@ Languages: English, 한국어, Deutsch, Français, Español, Русский, 简
 
 ## 한국어
 
-WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버프 해제 · 적 대상 메즈를 클릭 한 번으로** 합니다. 마법책에서 실제로 배운 액티브 주문만 읽어 필요한 대상만 보여 줍니다. 직업 기술 전문가를 한 번 방문하면 **레벨별로 배울 주문**도 알려 줍니다.
+WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버프 해제 · 적 대상 메즈를 클릭 한 번으로** 합니다. 마법책에서 실제로 배운 액티브 주문만 읽어 필요한 대상만 보여 줍니다. 직업 기술 전문가를 한 번 방문하면 **레벨별로 배울 주문**도 알려 주고, 특성 창에는 **직업별 추천 특성**을 넣어 줍니다.
 
 ![전술 보드와 레벨별 배울 스킬](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/ui_ko.png)
 
@@ -61,6 +69,7 @@ WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버�
 - **해제**: 내가 지울 수 있는 디버프에 걸린 파티원이 알림음과 함께 바로 나타납니다. 테두리 색이 디버프 종류이고, 지속형 해제가 걸려 있으면 `해제중`.
 - **메즈**: 적을 대상으로 잡으면 생명체 유형과 사거리에 맞는 군중 제어 주문을 배치합니다(좌 / 우 / Ctrl + 좌클릭).
 - 똑똑한 선택: 직업별 맞춤 버프, 저레벨 대상 자동 하향, 단체 버프 우선(선택), 곧 끝나는 버프도 빠진 것으로 표시.
+- 버프 칸은 전투 중에도 버프가 다시 걸리면 바로 `완료`로 바뀝니다.
 - 담당 공대 파티 선택, 파티 · 공대 칸 크기 따로, 잠금 · 접기 · 섹션 순서 변경, 마우스 올릴 때만 표시.
 
 ### 레벨별 배울 스킬
@@ -71,12 +80,18 @@ WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버�
 - 레벨이 오르면 새로 배울 수 있는 주문 수를 채팅창에 알려 줍니다.
 - 선택: 새 랭크를 배우면 단축바의 낮은 랭크를 자동으로 바꿉니다.
 
+### 추천 특성
+- 특성 창의 **추천 특성** 단추를 누르면 내 직업의 1~60레벨 빌드가 전문화마다 하나씩 나옵니다(예: `암흑 (딜러)  16/3/32`).
+- 하나를 고르면 남은 포인트를 빌드 순서대로 넣고, 적용할지 한 번 더 묻습니다. 취소하면 되돌립니다.
+- 레벨이 오를 때마다 다시 누르면 이어서 찍습니다.
+
 ## 명령어
 - `/ezsc` (`/spellcontrol`, `/스펠컨트롤`) — 설정창
 - `/ezsc spells` (`/ezsc 스킬`) — 레벨별 배울 스킬
 - `/ezsc toggle` — 보드 보이기/숨기기
 - `/ezsc lock` — 보드 잠금/해제
 - `/ezsc reset` — 보드 위치 · 크기 · 섹션 순서 초기화
+- `/추천특성` (`/eztalent`) — 추천 특성 메뉴
 
 보안 주문 버튼을 쓰기 때문에 전투 중에는 칸 구성이 바뀌지 않고, 전투가 끝나면 다시 정리됩니다.
 

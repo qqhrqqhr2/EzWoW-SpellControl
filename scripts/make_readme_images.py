@@ -2,9 +2,9 @@
 """Draws the README mock-ups of EzWoW - Spell Control (docs/images/ui_*.png, settings_*.png).
 
 The tactical board, the spells-by-level window, the spellbook panel, a spell tooltip and
-the settings window are rebuilt from the sizes, coordinates, colours and strings in the
-addon code (UI/MicroBoard.lua, UI/SpellsByLevel.lua, UI/OptionsWindow.lua, Core/Init.lua
-DEFAULTS, Core/Locales.lua), in game pixels x scale. Icons are simplified drawings;
+the settings window and the recommended-talents button, menu and popup are rebuilt from the sizes,
+coordinates, colours and strings in the addon code (UI/MicroBoard.lua, UI/SpellsByLevel.lua,
+UI/OptionsWindow.lua, Modules/TalentBuilds.lua, Data/TalentBuilds.lua, Core/Init.lua DEFAULTS, Core/Locales.lua), in game pixels x scale. Icons are simplified drawings;
 every name is made up.
 
 usage: python scripts/make_readme_images.py .
@@ -473,7 +473,15 @@ def load(root):
     sbl_win = re.search(r"win:SetSize\((\d+), (\d+)\)", sbl)
     dock = re.search(r"panel:SetSize\(280, math\.max\((\d+), math\.min\(bookHeight - 4, (\d+)\)\)\)", sbl)
     tb = [(n, int(o)) for n, o in re.findall(r'buildToolbarControl\("\w+", "(\w+)", (-?\d+)', mb)]
-    return {"L": L, "dflt": dflt, "th": th, "W": int(win_size.group(1)), "H": int(win_size.group(2)), "checks": checks,
+    # recommended talents: button / menu / popup strings and the Priest builds
+    tbm = read(root, "Modules/TalentBuilds.lua")
+    tbd = read(root, "Data/TalentBuilds.lua")
+    tl = {"ko": lua_strings(lua_table(tbm, r"koKR = \{")), "en": lua_strings(lua_table(tbm, r"enUS = \{"))}
+    specs = {k: {"ko": ko, "en": en} for k, ko, en in re.findall(r'\["([\w-]+)"\] = \{ ko = "([^"]*)", en = "([^"]*)" \}', tbd)}
+    builds = [{"spec": sp, "ko": ko, "en": en, "split": split} for sp, ko, en, split in
+              re.findall(r'spec = "([\w-]+)", ko = "([^"]*)", en = "([^"]*)", split = "([^"]*)"', lua_table(tbd, r"PRIEST = \{"))]
+    tb_btn = re.search(r'button:SetSize\((\d+), (\d+)\)', tbm)
+    return {"tl": tl, "tSpecs": specs, "tBuilds": builds, "tBtn": (int(tb_btn.group(1)), int(tb_btn.group(2))),"L": L, "dflt": dflt, "th": th, "W": int(win_size.group(1)), "H": int(win_size.group(2)), "checks": checks,
             "simple": simple, "sections": list(zip(sections, sec_keys)), "steppers": steppers, "actions": actions,
             "sbl": sbl_c, "sblWin": (int(sbl_win.group(1)), int(sbl_win.group(2))), "dockMinMax": (int(dock.group(1)), int(dock.group(2))),
             "toolbar": tb, "small": int(re.search(r"ns\.SMALL_CELL_SIZE = (\d+)", init).group(1)),
@@ -482,7 +490,7 @@ def load(root):
 
 T = {
     "ko": {
-        "lead": "파티 버프 · 디버프 해제 · 메즈를 클릭 한 번으로, 그리고 레벨별로 배울 주문을 한눈에 (사제 예시)",
+        "lead": "파티 버프 · 디버프 해제 · 메즈를 클릭 한 번으로, 레벨별로 배울 주문과 추천 특성까지 (사제 예시)",
         "me": "나", "party": ["들꽃노래", "잿빛서리", "검은송곳"], "enemy": "해골 마법사",
         "cls": "사제", "scanned": "2026-11-06 21:14",
         "spells": [
@@ -506,8 +514,9 @@ T = {
             ("레벨별 배울 스킬 (/ezsc spells)", "직업 기술 전문가를 열 때 저장한 목록. 지금 배울 수 있는 주문은 강조, 배운 주문은 흐리게 체크, 오른쪽은 비용."),
             ("주문책 옆 패널", "주문책을 열면 같은 목록이 옆에 붙습니다(줄마다 Lv). < 단추로 접기."),
             ("레벨업 알림", "레벨이 오르면 새로 배울 수 있는 주문 수를 채팅창에 알려 줍니다."),
+            ("추천 특성 (/추천특성)", "특성 창의 단추. 직업별 빌드를 고르면 남은 포인트를 빌드 순서대로 넣고, 적용할지 한 번 더 묻습니다. 레벨이 오를 때마다 다시 누르면 이어서 찍습니다."),
         ],
-        "foot": "애드온 코드의 창 크기 · 좌표 · 색상 · 문구로 재현한 예시 화면입니다. 전술 보드는 칸 크기 40(설정에서 바꿀 수 있음)으로 그렸습니다. 파티원 이름은 지어낸 예시이고, 아이콘과 주문책 테두리는 단순화했습니다.",
+        "foot": "애드온 코드의 창 크기 · 좌표 · 색상 · 문구로 재현한 예시 화면입니다. 전술 보드는 칸 크기 40(설정에서 바꿀 수 있음)으로 그렸습니다. 파티원 이름은 지어낸 예시이고, 아이콘과 주문책 · 특성 창 테두리는 단순화했습니다.",
         "sLead": "/ezsc · 버프 · 해제 · 메즈 동작, 클릭 지정, 보유 주문, 창 배치, 레벨별 스킬",
         "sTitle": "설정창",
         "learned": [("보유 버프 (좌/우):", "[좌] 신의 권능: 인내, [우] 내면의 열정"), ("보유 해제 (좌/우):", "[좌] 마법 무효화, [우] 질병 치료"),
@@ -523,7 +532,7 @@ T = {
         "sFoot": "애드온 코드의 창 크기 · 좌표 · 색상 · 문구로 재현한 예시 화면입니다. 체크 상태와 숫자는 기본값이며, 보유 주문 목록은 사제 예시입니다.",
     },
     "en": {
-        "lead": "One-click party buffs, cleanses and crowd control, plus the spells you can learn at each level (Priest example)",
+        "lead": "One-click party buffs, cleanses and crowd control, plus spells by level and recommended talents (Priest example)",
         "me": "Me", "party": ["Wildsong", "Ashfrost", "Darkfang"], "enemy": "Skeletal Mage",
         "cls": "Priest", "scanned": "2026-11-06 21:14",
         "spells": [
@@ -547,8 +556,9 @@ T = {
             ("Spells by level (/ezsc spells)", "Saved when you open your class trainer. Spells you can learn now are highlighted, learned ones are faded with a check, the cost is on the right."),
             ("Spellbook panel", "Opening the spellbook docks the same list next to it (with Lv on each row). Fold it with <."),
             ("Level-up notice", "On level-up, chat tells you how many new spells you can learn."),
+            ("Recommended talents (/eztalent)", "A button on the talent window. Pick a build for your class: free points are spent in the build's order, then you confirm before they are applied. Click again after each level to continue."),
         ],
-        "foot": "Mock-ups rebuilt from the window sizes, coordinates, colours and strings in the addon code. The board is drawn with cell size 40 (adjustable in the settings). Party names are made up; icons and the spellbook edge are simplified.",
+        "foot": "Mock-ups rebuilt from the window sizes, coordinates, colours and strings in the addon code. The board is drawn with cell size 40 (adjustable in the settings). Party names are made up; icons and the spellbook and talent window edges are simplified.",
         "sLead": "/ezsc · buff, cleanse & CC behaviour, click assignment, learned spells, layout, spells by level",
         "sTitle": "Settings",
         "learned": [("Buffs (L/R):", "[L] Power Word: Fortitude, [R] Inner Fire"), ("Cleanse (L/R):", "[L] Dispel Magic, [R] Cure Disease"),
@@ -735,10 +745,58 @@ def ui_page(lang, ctx):
                  f'border-radius:4px;font-size:15px;line-height:1.5;{SHADOW}"><span style="color:#ffff00">[{esc("레벨 21" if lang == "ko" else "Level 21")}]</span> '
                  f'<span style="color:#5CE0B8">{esc(t["chat"])}</span> <span style="color:#fff">{msg}</span></div>')
     calls.append((sbx, cy))
+    # 7 recommended talents: button on the talent window, its menu, the confirm popup
+    S = 1.15
+    tl = ctx["tl"][lang]
+    ky = cy + 84
+    strip_w = PAGE_W - 40 - sbx
+    bw, bh = ctx["tBtn"]
+    sw, sh = 150, 22                       # talent search box (simplified)
+    sx = sbx + strip_w - 16 - sw * S
+    bxx = sx - 10 * S - bw * S
+    red_btn = ("background:linear-gradient(#9a2216,#5e0f09);border:1px solid #2a0704;border-radius:3px;"
+               "box-shadow:inset 0 1px 0 rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center")
+    parts.append(f'<div class="abs" style="left:{sbx}px;top:{ky:.0f}px;width:{strip_w:.0f}px;height:{px(36)};'
+                 f'background:linear-gradient(#23252b,#17181c);border:{px(2)} solid #4b4b4f;border-radius:6px 6px 0 0">'
+                 + "".join(f'<div class="abs" style="left:{16 + i * 70}px;top:{px(9)};width:{px(56)};height:{px(14)};'
+                           f'background:rgba(255,255,255,.05);border-radius:3px"></div>' for i in range(3))
+                 + '</div>')
+    parts.append(f'<div class="abs" style="left:{sx:.0f}px;top:{ky + 7 * S:.0f}px;width:{px(sw)};height:{px(sh)};background:#0b0b0d;'
+                 f'border:1px solid #5a5a5e;border-radius:3px;font-size:{px(11)};color:#7a7a7a;padding-left:{px(8)};line-height:{px(sh - 2)}">'
+                 f'{esc("검색" if lang == "ko" else "Search")}</div>')
+    parts.append(f'<div class="abs" style="left:{bxx:.0f}px;top:{ky + 7 * S:.0f}px;width:{px(bw)};height:{px(bh)};{red_btn}">'
+                 f'<span style="font-size:{px(11)};color:#ffd100;{SHADOW}">{esc(tl["button"])}</span></div>')
+    # menu (MenuUtil context menu) under the button
+    cls_name = t["cls"]
+    rows = [f'<div style="color:#ffd100;font-size:{px(12)};padding:{px(3)} {px(10)}">{esc(tl["menuTitle"].replace("%s", cls_name))}</div>']
+    pick = None
+    for b in ctx["tBuilds"]:
+        label = f'{ctx["tSpecs"][b["spec"]][lang]} ({b[lang]})'
+        hl = "background:rgba(255,255,255,.13);" if b["spec"] == "shadow" else ""
+        if b["spec"] == "shadow":
+            pick = label
+        rows.append(f'<div style="{hl}color:#fff;font-size:{px(12)};padding:{px(3)} {px(10)};white-space:nowrap">{esc(label)}'
+                    f'&nbsp;&nbsp;<span style="color:#999999">{esc(b["split"])}</span></div>')
+    rows.append(f'<div style="height:1px;background:#4a4a4a;margin:{px(4)} {px(8)}"></div>')
+    rows.append(f'<div style="color:#8c8c8c;font-size:{px(12)};padding:{px(3)} {px(10)}">EzWoW - Spell Control</div>')
+    my = ky + (7 + bh + 4) * S
+    parts.append(f'<div class="abs" style="left:{bxx:.0f}px;top:{my:.0f}px;min-width:{px(180)};padding:{px(5)} 0;background:rgba(12,12,14,.95);'
+                 f'border:1px solid #5c5c60;border-radius:4px;box-shadow:0 6px 18px rgba(0,0,0,.5);{SHADOW}z-index:40">{"".join(rows)}</div>')
+    menu_bottom = my + (5 * 2 + 4 * 24 + 9 + 24) * S
+    # confirm popup (StaticPopup), left of the menu
+    pw = min(300, (bxx - sbx - 24) / S)
+    popup = wow(tl["confirm"].replace("%s", pick or "", 1).replace("%d", "10", 1)) + "<br><br>" + '<span style="color:#8c8c8c">EzWoW - Spell Control</span>'
+    pbtn = lambda s: (f'<div style="width:{px(110)};height:{px(22)};{red_btn}"><span style="font-size:{px(11)};color:#ffd100;{SHADOW}">'  # noqa: E731
+                      f'{esc(s)}</span></div>')
+    parts.append(f'<div class="abs" style="left:{sbx + 6:.0f}px;top:{my + 4:.0f}px;width:{px(pw)};padding:{px(14)} {px(12)} {px(12)};'
+                 f'background:rgba(8,8,10,.94);border:{px(2)} solid #6c6c70;border-radius:6px;text-align:center;font-size:{px(12)};'
+                 f'line-height:1.45;color:#fff;{SHADOW}box-shadow:0 8px 24px rgba(0,0,0,.55);z-index:35">{popup}'
+                 f'<div style="display:flex;justify-content:center;gap:{px(8)};margin-top:{px(12)}">{pbtn(tl["apply"])}{pbtn(tl["cancel"])}</div></div>')
+    calls.append((sbx, ky))
     parts.append(callouts(calls))
-    ny = max(ty + 420, cy + 80)
-    parts.append(notes_block(50, ny, 730, [(a, esc(b_)) for a, b_ in t["notes"][:3]]))
-    parts.append(notes_block(820, ny, 730, [(a, esc(b_)) for a, b_ in t["notes"][3:]], start=4))
+    ny = max(ty + 420, menu_bottom + 40, my + 4 + 200 * S)   # under the menu and the popup
+    parts.append(notes_block(50, ny, 730, [(a, esc(b_)) for a, b_ in t["notes"][:4]]))
+    parts.append(notes_block(820, ny, 730, [(a, esc(b_)) for a, b_ in t["notes"][4:]], start=5))
     parts.append(f'<div class="foot" style="left:50px;width:1500px">{esc(t["foot"])}</div>')
     return "".join(parts)
 
