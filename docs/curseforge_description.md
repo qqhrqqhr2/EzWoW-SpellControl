@@ -114,3 +114,9 @@ WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버�
 보안 주문 버튼을 쓰기 때문에 전투 중에는 칸 구성이 바뀌지 않고, 전투가 끝나면 다시 정리됩니다.
 
 지원 언어: English, 한국어, Deutsch, Français, Español, Русский, 简体中文, 繁體中文.
+
+---
+
+**Support:** If you find this addon useful, you can support its development. [Buy Me a Coffee ☕](https://buymeacoffee.com/qqhrqqhr2)
+
+**후원:** 애드온이 도움이 되셨다면 개발 후원으로 응원해 주세요. [Buy Me a Coffee ☕](https://buymeacoffee.com/qqhrqqhr2)
