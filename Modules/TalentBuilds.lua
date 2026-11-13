@@ -172,7 +172,9 @@ local function showConfirm(label, count)
                 say(T("failed"))
             end
         end,
-        OnCancel = function()
+        OnCancel = function(_, _, reason)
+            -- reuse: ApplyTalentBuild already rolled back the old build and staged a new one
+            if reason == "override" then return end
             local p = pending
             pending = nil
             if p then
@@ -181,6 +183,7 @@ local function showConfirm(label, count)
             end
         end,
         timeout = 0,
+        noCancelOnReuse = true,
         whileDead = true,
         hideOnEscape = true,
         preferredIndex = 3,
@@ -235,6 +238,8 @@ function ns:ApplyTalentBuild(build)
     end
 
     if bought == 0 then
+        -- a popup left from an earlier pick would still offer its points (rolled back above)
+        if StaticPopup_Hide then pcall(StaticPopup_Hide, POPUP) end
         say(T("nothing"))
         return
     end
@@ -285,16 +290,17 @@ end
 
 -- a known talent window, or else any large open window named like one
 local foundName, learnedName
-local function shownHost()
+local function shownHost(scan)
     for _, name in ipairs(FRAME_NAMES) do
         local f = _G[name]
         if type(f) == "table" and f.IsShown and f:IsShown() and bigEnough(f) then
             foundName = name
+            learnedName = learnedName or name   -- known window: the full scan is never needed again
             return f
         end
     end
-    -- the full scan runs only until the window's name is known
-    if learnedName or type(EnumerateFrames) ~= "function" then return nil end
+    -- the full scan runs only on a panel-open signal, and only until the window's name is known
+    if not scan or learnedName or type(EnumerateFrames) ~= "function" then return nil end
     local f = EnumerateFrames()
     local best, bestArea
     -- some frames are off limits to addons: every call on them goes through pcall
@@ -342,8 +348,8 @@ local function createButton(host)
 end
 
 -- put the button on the open talent window (left of its search box)
-local function attach()
-    local host = shownHost()
+local function attach(scan)
+    local host = shownHost(scan)
     if not host then return end
     if not button then createButton(host) end
     if button.host == host then return end
@@ -366,15 +372,26 @@ local function attach()
     button:Show()
 end
 
-if type(hooksecurefunc) == "function" and type(_G.ToggleTalentFrame) == "function" then
-    pcall(hooksecurefunc, "ToggleTalentFrame", function()
-        if C_Timer and C_Timer.After then C_Timer.After(0, attach) else attach() end
-    end)
+local function attachScan() attach(true) end
+local function deferScan()
+    if C_Timer and C_Timer.After then C_Timer.After(0, attachScan) else attachScan() end
+end
+if type(hooksecurefunc) == "function" then
+    if type(_G.ToggleTalentFrame) == "function" then
+        pcall(hooksecurefunc, "ToggleTalentFrame", deferScan)
+    end
+    -- the window can also open without ToggleTalentFrame (key binding, micro button)
+    if type(_G.ShowUIPanel) == "function" then
+        pcall(hooksecurefunc, "ShowUIPanel", function()
+            if learnedName then return end
+            deferScan()
+        end)
+    end
 end
 if C_Timer and C_Timer.NewTicker then
     C_Timer.NewTicker(1, function()
         if button and button.host and button.host:IsShown() then return end
-        attach()
+        attach(false)   -- known names only, never the full frame walk
     end)
 end
 
@@ -385,7 +402,7 @@ SLASH_EZWOWTALENTBUILD1 = "/eztalent"
 SLASH_EZWOWTALENTBUILD2 = "/추천특성"
 SlashCmdList.EZWOWTALENTBUILD = function(msg)
     if msg == "where" then
-        local host = shownHost()
+        local host = shownHost(true)
         say("talent window: " .. tostring(host and foundName or "none")
             .. ", button: " .. tostring(button and button:IsVisible() and "shown" or "hidden"))
         return

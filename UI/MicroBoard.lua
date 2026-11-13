@@ -454,6 +454,11 @@ function TacticalUnitBoard.presentCellTooltip(cell, forceRebuild)
     if role == "BUFF" then
         if cell.boundLClickBuff then
             GameTooltip:AddLine(string.format(ns:L("TIP_ACTION_LCLICK_BUFF"), cell.boundLClickBuff), ACCENT_R, ACCENT_G, ACCENT_B)
+            -- buffs the following left clicks cast, one per successful cast
+            local laterCasts = ns.GetCellLeftClickNextText and ns:GetCellLeftClickNextText(cell)
+            if laterCasts then
+                GameTooltip:AddLine(string.format(ns:L("TIP_ACTION_LCLICK_NEXT"), laterCasts), unpack(STYLE.textSub))
+            end
         end
         if cell.boundRClickBuff then
             GameTooltip:AddLine(string.format(ns:L("TIP_ACTION_RCLICK_BUFF"), cell.boundRClickBuff), unpack(STYLE.textSub))
@@ -1132,6 +1137,13 @@ function ns:ConfigureBuffCellAuraContainer(cell, unit, buffDef)
     end
 end
 
+-- a left click without Alt or Shift runs a buff cell's cast sequence (Alt-left targets,
+-- Shift-left does nothing; a buff picked with Ctrl + wheel in combat is a plain spell)
+local function clickRunsSequence(cell, button)
+    return cell.ezSeqSteps ~= nil and not cell.ezPickedLeft and button == "LeftButton"
+        and not (IsAltKeyDown and IsAltKeyDown()) and not (IsShiftKeyDown and IsShiftKeyDown())
+end
+
 function TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, frameName, sectionRole)
     local b = CreateFrame("Button", frameName, unitBoardFrame, "SecureUnitButtonTemplate")
     b:SetSize(36, 36)
@@ -1188,7 +1200,26 @@ function TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, frameName, sect
         end
     end)
 
-    b:SetScript("PostClick", function(self)
+    if sectionRole == "BUFF" then
+        -- called by the secure Ctrl + wheel snippet in combat (ns:InstallCombatWheel)
+        b.EzwCombatWheelPick = function(self, index)
+            ns:OnCombatWheelPick(self, index)
+        end
+    end
+
+    -- the cast a click sends is told apart from the same spell cast elsewhere
+    -- (ns:OnSequenceCastSent, Modules/SecureAttributes.lua)
+    b:SetScript("PreClick", function(self, button)
+        if ns.NoteSequenceClick then
+            ns:NoteSequenceClick(clickRunsSequence(self, button) and self or nil)
+        end
+    end)
+
+    b:SetScript("PostClick", function(self, button)
+        -- a left click ran the cell's cast sequence: the game now holds its place
+        if clickRunsSequence(self, button) then
+            self.ezSeqRan = true
+        end
         local unit = self.unit
         local role = self.sectionRole
         local function syncAfterClick()
@@ -1243,6 +1274,51 @@ function TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, frameName, sect
 
     b:Hide()
     return b
+end
+
+-- Ctrl + wheel on a buff cell in combat: the handler above cannot change the click
+-- then, so a secure snippet turns the left-click buff through the choices stored on
+-- the cell out of combat (ezw-n, ezw-1..n, ezw-i; Modules/SecureAttributes.lua) and
+-- tells the cell which one it took. Out of combat it leaves the wheel to the handler.
+local COMBAT_WHEEL_SNIPPET = [[
+    if not IsControlKeyDown() or not PlayerInCombat() then return end
+    local n = tonumber(self:GetAttribute("ezw-n")) or 0
+    if n < 2 then return false end
+    local i = tonumber(self:GetAttribute("ezw-i")) or 1
+    if (offset or -1) < 0 then
+        i = (i % n) + 1
+    else
+        i = ((i - 2) % n) + 1
+    end
+    local cast = self:GetAttribute("ezw-" .. i)
+    if not cast then return false end
+    self:SetAttribute("ezw-i", i)
+    self:SetAttribute("type1", "spell")
+    self:SetAttribute("spell1", cast)
+    self:SetAttribute("ctrl-type1", "spell")
+    self:SetAttribute("ctrl-spell1", cast)
+    self:CallMethod("EzwCombatWheelPick", i)
+    return false
+]]
+
+function ns:InstallCombatWheel()
+    if self.combatWheelInstalled then return end
+    local unitBoardFrame = self.boardFrame
+    if not (unitBoardFrame and unitBoardFrame.buffCells) then return end
+    -- wrapping is a protected action: done once, out of combat
+    if InCombatLockdown and InCombatLockdown() then
+        self.combatWheelPending = true
+        return
+    end
+    self.combatWheelPending = false
+    self.combatWheelInstalled = true
+    if type(SecureHandlerWrapScript) ~= "function" then return end
+    local okHeader, header = pcall(CreateFrame, "Frame", nil, UIParent, "SecureHandlerBaseTemplate")
+    if not okHeader or not header then return end
+    self.combatWheelHeader = header
+    for _, cell in ipairs(unitBoardFrame.buffCells) do
+        pcall(SecureHandlerWrapScript, cell, "OnMouseWheel", header, COMBAT_WHEEL_SNIPPET)
+    end
 end
 
 function ns:BuildTacticalUnitBoard()
@@ -1485,6 +1561,7 @@ function ns:BuildTacticalUnitBoard()
     end)
 
     self.boardFrame = unitBoardFrame
+    self:InstallCombatWheel()
     self:LayoutBoardCells()
     return unitBoardFrame
 end
@@ -1741,6 +1818,9 @@ function ns:UpdateCCTargetCellVisual()
         local enemyShortName = "⚔" .. TacticalUnitBoard.shortenUnitName(ccSt.name, 3)
         TacticalUnitBoard.fitFontStringToWidth(cell.nameText, enemyShortName, size - 4, 10, 7)
     elseif ccSt.rawNameSecret then
+        -- the next readable name must fit again; drop the scale left by the last fit
+        cell.nameText._lastFitText = nil
+        if cell.nameText.SetTextScale then cell.nameText:SetTextScale(1) end
         cell.nameText:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
         cell.nameText:SetWordWrap(false)
         pcall(cell.nameText.SetText, cell.nameText, ccSt.rawName)
@@ -1879,9 +1959,17 @@ function ns:UpdateSingleUnitCellVisualOnly(cell)
     end
     TacticalUnitBoard.fitFontStringToWidth(cell.nameText, shortName, size - 4, 10, 7)
 
+    -- what the next left click casts when it is not the scan's own pick: the current
+    -- step of the cast sequence, or a buff picked with Ctrl + wheel in combat
+    local leftChoice = self:GetCellLeftClickChoice(cell)
+    if leftChoice then
+        cell.boundLClickBuff = leftChoice.castSpell
+        cell.boundCtrlLClickBuff = leftChoice.castSpell
+    end
+
     -- the buff this cell is about; out of combat the overlay is only kept in step
     -- (hidden), in combat it shows the live "present" state over a "missing" base
-    local aboutChoice = state.primaryMissingBuff or state.slot1Choice
+    local aboutChoice = leftChoice or state.primaryMissingBuff or state.slot1Choice
     local aboutDef = aboutChoice and aboutChoice.buffDef
     local inCombat = InCombatLockdown and InCombatLockdown()
     cell._ezscBuffShortName, cell._ezscBuffClassColor = shortName, classColor
@@ -1922,9 +2010,9 @@ function ns:UpdateSingleUnitCellVisualOnly(cell)
     )
 
     -- with the live overlay the base always shows "missing"; the overlay covers it
-    -- while the buff is really there
+    -- while the buff is really there. The left click's next buff is shown the same way.
     local mbVal = state.primaryMissingBuff
-    if liveOverlay then
+    if liveOverlay or leftChoice then
         mbVal = aboutChoice
     end
     if mbVal then

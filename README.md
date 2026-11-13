@@ -67,6 +67,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 - **만료 임박**: 남은 시간이 설정값(기본 3분)보다 짧은 버프는 빠진 것으로 보고 미리 다시 걸 수 있게 합니다.
 - **랭크 자동 교체**: 새 랭크를 배우면 단축바에 있는 낮은 랭크를 새 랭크로 바꿉니다.
 - **전투 중 버프 상태**: 전투 중에도 버프 칸은 버프가 다시 걸리면 바로 `완료`로 바뀌고, 풀리면 다시 빠진 상태로 보입니다.
+- **전투 중에도 같은 조작**: 빠진 버프가 둘 이상이면 좌클릭은 시전에 성공할 때마다 다음 버프로 넘어갑니다(예: 야생의 징표 → 가시). 전투 중에도 그대로이고, 칸과 툴팁에 다음에 걸 버프가 나옵니다. **Ctrl + 휠**도 전투 중에 됩니다. 단, 전투 중에 같은 랭크의 버프를 다른 칸이나 단축바로 걸면 그 전투에서 이미 누른 칸의 순서도 함께 넘어갈 수 있습니다. 칸에는 다음 클릭에 걸릴 버프가 항상 나옵니다.
 
 #### 추천 특성
 
@@ -187,6 +188,7 @@ Badges: `Range` out of range · `OK` buff active · `OFF` offline · `DEAD` dead
 - **Expiring soon**: buffs with less time left than the setting (3 minutes by default) count as missing, so you can renew them early.
 - **Rank replacement**: after you learn a new rank, lower ranks on your action bars are swapped for it.
 - **Buff state in combat**: buff cells switch to `OK` as soon as the buff is back on, even in combat, and show as missing again when it falls off.
+- **Same controls in combat**: with two or more buffs missing, the left click moves on to the next buff after each successful cast (e.g. Mark of the Wild → Thorns), in combat too; the cell and tooltip show the buff it casts next. **Ctrl + wheel** works in combat as well. In combat, casting the same rank of a buff from another cell or an action bar can also move on a cell you already clicked in that fight; the cell always shows what its next click casts.
 
 #### Recommended talents
 

@@ -544,27 +544,18 @@ function ns:EnsureSelectedBuffDefaults()
     if not EzWoW_SpellControlDB then return end
     EzWoW_SpellControlDB.selectedBuffSlot1ByClass = EzWoW_SpellControlDB.selectedBuffSlot1ByClass or {}
     EzWoW_SpellControlDB.selectedBuffSlot2ByClass = EzWoW_SpellControlDB.selectedBuffSlot2ByClass or {}
+    -- choices are saved account-wide per class: a key this character has not learned
+    -- (alt, respec) is kept and only read as AUTO (GetEffectiveBuffSlotKey)
+end
 
-    local classToken = self.playerClass
-    local cur1 = EzWoW_SpellControlDB.selectedBuffSlot1ByClass[classToken]
-    local cur2 = EzWoW_SpellControlDB.selectedBuffSlot2ByClass[classToken]
-
-    local valid1 = (cur1 == "AUTO")
-    local valid2 = (cur2 == "AUTO" or cur2 == "NONE")
-
-    for _, buttonWidget in ipairs(self.learnedBuffDefs) do
-        if buttonWidget.isLearned then
-            if buttonWidget.key == cur1 then valid1 = true end
-            if buttonWidget.key == cur2 then valid2 = true end
-        end
-    end
-
-    if not valid1 then
-        EzWoW_SpellControlDB.selectedBuffSlot1ByClass[classToken] = "AUTO"
-    end
-    if not valid2 then
-        EzWoW_SpellControlDB.selectedBuffSlot2ByClass[classToken] = "AUTO"
-    end
+-- saved slot choice for this character: "AUTO", "NONE" (slot 2 only) or a learned buff key
+function ns:GetEffectiveBuffSlotKey(slotNum)
+    local db = EzWoW_SpellControlDB
+    local t = db and ((slotNum == 2) and db.selectedBuffSlot2ByClass or db.selectedBuffSlot1ByClass)
+    local key = type(t) == "table" and t[self.playerClass]
+    if type(key) ~= "string" or key == "AUTO" then return "AUTO" end
+    if key == "NONE" then return (slotNum == 2) and "NONE" or "AUTO" end
+    return self:GetBuffDefByKey(key) and key or "AUTO"
 end
 
 function ns:GetBuffDefByKey(key)
@@ -578,8 +569,7 @@ function ns:GetBuffDefByKey(key)
 end
 
 function ns:GetSelectedBuffSlot1Def()
-    local classToken = self.playerClass
-    local key = EzWoW_SpellControlDB and EzWoW_SpellControlDB.selectedBuffSlot1ByClass and EzWoW_SpellControlDB.selectedBuffSlot1ByClass[classToken]
+    local key = self:GetEffectiveBuffSlotKey(1)
     if key and key ~= "AUTO" and key ~= "NONE" then
         local found = self:GetBuffDefByKey(key)
         if found then return found end
@@ -598,8 +588,7 @@ function ns:GetSelectedBuffSlot1Def()
 end
 
 function ns:GetSelectedBuffSlot2Def()
-    local classToken = self.playerClass
-    local key = EzWoW_SpellControlDB and EzWoW_SpellControlDB.selectedBuffSlot2ByClass and EzWoW_SpellControlDB.selectedBuffSlot2ByClass[classToken]
+    local key = self:GetEffectiveBuffSlotKey(2)
     if key == "NONE" then return nil end
     if key and key ~= "AUTO" then
         local found = self:GetBuffDefByKey(key)
@@ -1039,7 +1028,8 @@ function ns:GetUnitRangeBoolean(spellName, spellID, unit)
         end
     end
 
-    if CheckInteractDistance then
+    -- (in combat the engine blocks this call for addons on units that are not hostile)
+    if CheckInteractDistance and not (InCombatLockdown and InCombatLockdown()) then
         local okInt, inDist = pcall(CheckInteractDistance, unit, 4)
         if okInt then
             if issecretvalue(inDist) then
@@ -1233,6 +1223,33 @@ function ns:GetPrimaryDispelTypeForSpell(dispelEntry)
     return bestType or "Poison"
 end
 
+-- one buff for the left-click order (each buff once)
+local function addLeftClickStep(order, choice)
+    if not (choice and choice.buffDef and choice.castSpell) then return end
+    for index = 1, #order do
+        if order[index].buffDef.key == choice.buffDef.key then return end
+    end
+    order[#order + 1] = choice
+end
+
+-- left-click order from the slot settings alone; skipKey = a buff counted as already on
+local function addPlainLeftClickOrder(order, missingBuffs, autoPick, c1, c1Missing, c2, c2Follows, skipKey)
+    if autoPick then
+        for _, mbVal in ipairs(missingBuffs) do
+            if mbVal.buffDef.key ~= skipKey then
+                addLeftClickStep(order, mbVal)
+            end
+        end
+        return
+    end
+    if c1 and c1Missing and c1.buffDef.key ~= skipKey then
+        addLeftClickStep(order, c1)
+    end
+    if c2 and c2Follows and c2.buffDef.key ~= skipKey then
+        addLeftClickStep(order, c2)
+    end
+end
+
 function ns:ScanUnitState(unit)
     local unitState = self.unitStates[unit]
     if not unitState then
@@ -1242,6 +1259,7 @@ function ns:ScanUnitState(unit)
             missingBuffs = {},
             tooLowBuffs = {},
             validChoices = {},
+            leftClickOrder = {},
             lastKnownActiveBuffKeys = {},
         }
         self.unitStates[unit] = unitState
@@ -1251,6 +1269,8 @@ function ns:ScanUnitState(unit)
         wipe(unitState.tooLowBuffs)
         unitState.validChoices = unitState.validChoices or {}
         wipe(unitState.validChoices)
+        unitState.leftClickOrder = unitState.leftClickOrder or {}
+        wipe(unitState.leftClickOrder)
         unitState.lastKnownActiveBuffKeys = unitState.lastKnownActiveBuffKeys or {}
     end
 
@@ -1587,8 +1607,8 @@ function ns:ScanUnitState(unit)
     local smartBuff = not EzWoW_SpellControlDB or (EzWoW_SpellControlDB.smartBuff ~= false)
     local trackSecond = not EzWoW_SpellControlDB or (EzWoW_SpellControlDB.trackSecondBuff ~= false)
     local classToken = self.playerClass
-    local manualKey1 = EzWoW_SpellControlDB and EzWoW_SpellControlDB.selectedBuffSlot1ByClass and EzWoW_SpellControlDB.selectedBuffSlot1ByClass[classToken]
-    local manualKey2 = EzWoW_SpellControlDB and EzWoW_SpellControlDB.selectedBuffSlot2ByClass and EzWoW_SpellControlDB.selectedBuffSlot2ByClass[classToken]
+    local manualKey1 = self:GetEffectiveBuffSlotKey(1)
+    local manualKey2 = self:GetEffectiveBuffSlotKey(2)
 
     local candidates = self:GetCandidateBuffDefsForUnit(unit, unitState.classFile)
     local validChoices = unitState.validChoices
@@ -1628,7 +1648,10 @@ function ns:ScanUnitState(unit)
         end
     end
 
-    if smartBuff and (not manualKey1 or manualKey1 == "AUTO") then
+    local autoPick = smartBuff and (not manualKey1 or manualKey1 == "AUTO")
+    -- slot buffs of the manual path, for the left-click order below
+    local manualC1, manualC1Missing, manualC2, manualC2Follows = nil, false, nil, false
+    if autoPick then
         if #unitState.missingBuffs > 0 then
             unitState.slot1Choice = unitState.missingBuffs[1]
             unitState.slot1Choice.slotIndex = 1
@@ -1676,7 +1699,9 @@ function ns:ScanUnitState(unit)
                 c1Val.buffDef = d1Val
                 c1Val.slotIndex = 1
                 unitState.slot1Choice = c1Val
-                if not hasBuffActiveOnUnit(d1Val) then
+                manualC1 = c1Val
+                manualC1Missing = not hasBuffActiveOnUnit(d1Val)
+                if manualC1Missing then
                     unitState.primaryMissingBuff = c1Val
                 end
             end
@@ -1689,7 +1714,10 @@ function ns:ScanUnitState(unit)
                 c2Val.buffDef = d2Val
                 c2Val.slotIndex = 2
                 unitState.slot2Choice = c2Val
-                if trackSecond and not hasBuffActiveOnUnit(d2Val) and not unitState.primaryMissingBuff then
+                local c2Missing = trackSecond and not hasBuffActiveOnUnit(d2Val)
+                manualC2 = c2Val
+                manualC2Follows = smartBuff and c2Missing and true or false
+                if c2Missing and not unitState.primaryMissingBuff then
                     unitState.primaryMissingBuff = c2Val
                     if smartBuff then
                         unitState.slot2Choice = unitState.slot1Choice
@@ -1746,6 +1774,30 @@ function ns:ScanUnitState(unit)
             self.unitWheelBuffKey[unit] = nil
             self.unitWheelBuffWasActive[unit] = nil
         end
+    end
+
+    -- buffs the left click casts one after another, each once the one before has landed:
+    -- out of combat every scan moves the left click on; in combat a cast sequence built
+    -- from this order does it (Modules/SecureAttributes.lua)
+    local leftOrder = unitState.leftClickOrder
+    local pickedChoice = unitState.wheelSelectedChoice
+    if pickedChoice then
+        addLeftClickStep(leftOrder, pickedChoice)
+        -- a picked buff that was missing gives way to the others once it has landed
+        if self.unitWheelBuffWasActive[unit] == false and not pickedChoice.isActive then
+            local othersMissing = false
+            for _, mbVal in ipairs(unitState.missingBuffs) do
+                if mbVal.buffDef.key ~= pickedChoice.buffDef.key then
+                    othersMissing = true
+                    break
+                end
+            end
+            if othersMissing then
+                addPlainLeftClickOrder(leftOrder, unitState.missingBuffs, autoPick, manualC1, manualC1Missing, manualC2, manualC2Follows, pickedChoice.buffDef.key)
+            end
+        end
+    else
+        addPlainLeftClickOrder(leftOrder, unitState.missingBuffs, autoPick, manualC1, manualC1Missing, manualC2, manualC2Follows, nil)
     end
 
     local chosenBuff = unitState.primaryMissingBuff or unitState.slot1Choice or unitState.slot2Choice
@@ -1863,6 +1915,13 @@ function ns:RebuildActiveUnits()
         for index = 1, math.min(numericVal, 40) do
             local unitRef = "raid" .. index
             if safeVal(UnitExists(unitRef)) then
+                -- own cell uses "player" so self-only buffs (armors, shouts, aspects...) are offered
+                if UnitIsUnit then
+                    local okMe, isMe = pcall(UnitIsUnit, unitRef, "player")
+                    if okMe and safeVal(isMe) == true then
+                        unitRef = "player"
+                    end
+                end
                 local subgroup = 1
                 if GetRaidRosterInfo then
                     local okInfo, _, _, groupNum = pcall(GetRaidRosterInfo, index)

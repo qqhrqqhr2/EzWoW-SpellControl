@@ -102,7 +102,7 @@ function ns:CycleSelectedBuffSlot(slotNum)
 
     local classToken = self.playerClass
     local targetTable = (slotNum == 2) and EzWoW_SpellControlDB.selectedBuffSlot2ByClass or EzWoW_SpellControlDB.selectedBuffSlot1ByClass
-    local lookupKey = targetTable[classToken] or "AUTO"
+    local lookupKey = self:GetEffectiveBuffSlotKey(slotNum)
     local nextIdx = 1
     for index, entryKey in ipairs(keys) do
         if entryKey == lookupKey then
@@ -711,12 +711,12 @@ function ns:RefreshSettingsTexts()
     local s1Def = self:GetSelectedBuffSlot1Def()
     local s2Def = self:GetSelectedBuffSlot2Def()
 
-    local rawSlot1 = (EzWoW_SpellControlDB.selectedBuffSlot1ByClass and EzWoW_SpellControlDB.selectedBuffSlot1ByClass[classToken]) or "AUTO"
+    local rawSlot1 = self:GetEffectiveBuffSlotKey(1)
     local slot1Name = (rawSlot1 == "AUTO") and self:L("OPT_AUTO")
         or ((s1Def and s1Def.displayName) or self:L("SPELL_NOT_LEARNED"))
     fitFontStringToWidth(themeColor.slot1Btn.label, self:L("OPT_PRIMARY_BUFF") .. " " .. slot1Name .. " ▼", 177, 12, 9)
 
-    local rawSlot2 = (EzWoW_SpellControlDB.selectedBuffSlot2ByClass and EzWoW_SpellControlDB.selectedBuffSlot2ByClass[classToken]) or "AUTO"
+    local rawSlot2 = self:GetEffectiveBuffSlotKey(2)
     local slot2Name
     if rawSlot2 == "NONE" then
         slot2Name = self:L("OPT_NONE")
