@@ -7,9 +7,9 @@ local ADDON_NAME, ns = ...
 
 -- The "EzWoW - ..." name line at the end of tooltip additions is drawn small.
 -- Shared by the EzWoW addons: the first one loaded sets it up.
-if not (_G.EzWoWTooltipTagSizer and _G.EzWoWTooltipTagSizer.version == 3) then
+if not (_G.EzWoWTooltipTagSizer and (tonumber(_G.EzWoWTooltipTagSizer.version) or 0) >= 4) then
     local sizer = {}
-    sizer.version = 3
+    sizer.version = 4
     _G.EzWoWTooltipTagSizer = sizer
     local smallFont
     local original = setmetatable({}, { __mode = "k" })   -- font string -> its own font object
@@ -26,14 +26,25 @@ if not (_G.EzWoWTooltipTagSizer and _G.EzWoWTooltipTagSizer.version == 3) then
         if type(text) ~= "string" or (issecretvalue and issecretvalue(text)) then return false end
         return text:find("^EzWoW %- ") ~= nil
     end
+    -- the size goes on the line itself too: a size another addon put on the
+    -- line (a font addon) would stay over the font object otherwise
+    local function setSize(fs, font)
+        if not (font and font.GetFont and fs.SetFont) then return end
+        local path, size, flags = font:GetFont()
+        if path and size then fs:SetFont(path, size, flags or "") end
+    end
     local function fit(fs, tag)
         if not fs then return end
         if tag then
             if not original[fs] then original[fs] = fs:GetFontObject() or GameTooltipText end
-            if tagFont() then fs:SetFontObject(smallFont) end
+            if tagFont() then
+                fs:SetFontObject(smallFont)
+                setSize(fs, smallFont)
+            end
             fs:SetTextColor(0.5, 0.5, 0.5)
         elseif original[fs] then
             fs:SetFontObject(original[fs])
+            setSize(fs, original[fs])
             original[fs] = nil
         end
     end
@@ -58,6 +69,7 @@ if not (_G.EzWoWTooltipTagSizer and _G.EzWoWTooltipTagSizer.version == 3) then
             local fsName = fs.GetName and fs:GetName()
             if type(fsName) == "string" and (fsName:find(rightPrefix, 1, true) == 1 or fsName:find(leftPrefix, 1, true) == 1) then
                 fs:SetFontObject(font)
+                setSize(fs, font)
                 original[fs] = nil
             end
         end
@@ -111,19 +123,33 @@ local function callTrainer(name, ...)
     return pcall(fn, ...)
 end
 
+-- service types; the client may hand one back where the rank text belongs
+local SERVICE_TYPES = { available = true, unavailable = true, used = true, header = true }
+TrainerSpells.SERVICE_TYPES = SERVICE_TYPES
+
 local function readServiceInfo(index)
     local ok, a, b, c, d = callTrainer("GetTrainerServiceInfo", index)
     if not ok then return nil end
+    local info
     if type(a) == "table" then
-        return {
+        info = {
             name = plain(a.name),
             rank = plain(a.rank or a.subText or a.nameSubtext),
             category = plain(a.category or a.serviceType or a.type),
             expanded = plain(a.isExpanded or a.expanded),
             spellID = plain(a.spellID),
         }
+    else
+        info = { name = plain(a), rank = plain(b), category = plain(c), expanded = plain(d) }
     end
-    return { name = plain(a), rank = plain(b), category = plain(c), expanded = plain(d) }
+    -- (name, type, expanded) instead of (name, rank, type, expanded)
+    if type(info.rank) == "string" and SERVICE_TYPES[info.rank] and not SERVICE_TYPES[info.category] then
+        info.expanded = info.category
+        info.category = info.rank
+        info.rank = nil
+    end
+    if type(info.rank) ~= "string" or info.rank == "" then info.rank = nil end
+    return info
 end
 
 local function spellNameByID(spellID)
@@ -202,9 +228,26 @@ function TrainerSpells.GetClassData(classToken)
     classToken = classToken or ns.playerClass or select(2, UnitClass("player"))
     local data = classToken and db.trainerSpells[classToken]
     if type(data) == "table" and type(data.spells) == "table" and #data.spells > 0 then
+        TrainerSpells.CleanEntries(data)
         return data
     end
     return nil
+end
+
+-- Lists saved before the service type was read right carry it as the rank
+function TrainerSpells.CleanEntries(data)
+    if data.cleaned then return end
+    for _, entry in ipairs(data.spells) do
+        if type(entry) == "table" and type(entry.rank) == "string" and SERVICE_TYPES[entry.rank] then
+            if entry.rank == "used" then entry.used = true end
+            entry.rank = nil
+            if entry.spellID then
+                local sub = spellSubtextByID(entry.spellID)
+                if type(sub) == "string" and sub ~= "" then entry.rank = sub end
+            end
+        end
+    end
+    data.cleaned = true
 end
 
 -----------------------------------------------------------------------------
@@ -262,8 +305,14 @@ local function collectServices()
                 currentLine = info.name
             else
                 realCount = realCount + 1
-                local rankText = (type(info.rank) == "string" and info.rank ~= "") and info.rank or nil
-                local key = info.name .. "\001" .. (rankText or "")
+                local spellID = resolveServiceSpellID(index, info)
+                local rankText = info.rank
+                if not rankText and spellID then
+                    local sub = spellSubtextByID(spellID)
+                    if type(sub) == "string" and sub ~= "" then rankText = sub end
+                end
+                local key = spellID and ("#" .. spellID)
+                    or (info.name .. "\001" .. (rankText or "") .. "\001" .. tostring(info.category))
                 if not seen[key] then
                     seen[key] = true
                     local entry = { name = info.name, rank = rankText }
@@ -278,7 +327,7 @@ local function collectServices()
                     local okLine, skillLine = callTrainer("GetTrainerServiceSkillLine", index)
                     skillLine = okLine and plain(skillLine) or nil
                     entry.skillLine = (type(skillLine) == "string" and skillLine ~= "") and skillLine or currentLine
-                    entry.spellID = resolveServiceSpellID(index, info)
+                    entry.spellID = spellID
                     if info.category == "used" then
                         entry.used = true
                         usedCount = usedCount + 1
@@ -503,7 +552,12 @@ end
 
 function TrainerSpells.IsEntryLearned(entry, data)
     if type(entry) ~= "table" then return false end
-    if entry.spellID and isSpellKnownByID(entry.spellID) then return true end
+    if entry.spellID then
+        -- the exact rank is known: the spell name alone (a lower rank in the
+        -- spellbook) must not count
+        if isSpellKnownByID(entry.spellID) then return true end
+        return (entry.used and data and data.scannedBy == TrainerSpells.CharacterKey()) and true or false
+    end
     local rec = getKnownIndex()[entry.name]
     if rec then
         if not entry.rank or rec.ranks[entry.rank] then return true end
@@ -544,14 +598,27 @@ function TrainerSpells.GetMaxLevel()
     return maxLevel
 end
 
+-- learned spells come back from the trainer without a level
+local function levelLearned(entry)
+    local level = tonumber(entry.level) or 1
+    if level > 1 or not entry.spellID then return level end
+    local fn = (C_Spell and C_Spell.GetSpellLevelLearned) or _G.GetSpellLevelLearned
+    if type(fn) == "function" then
+        local ok, v = pcall(fn, entry.spellID)
+        v = ok and tonumber(plain(v)) or nil
+        if v and v > 1 then return v end
+    end
+    return level
+end
+
 local function sortRows(a, b)
     if a.level ~= b.level then return a.level < b.level end
     if a.name ~= b.name then return a.name < b.name end
     return (rankNumber(a.rank) or 0) < (rankNumber(b.rank) or 0)
 end
 
--- Unlearned spells below the player's level (learnable now) plus every spell
--- from the player's level up to the level cap, sorted by required level.
+-- Every spell from the trainer (learned ones dimmed) up to the level cap,
+-- sorted by required level.
 function TrainerSpells.BuildView()
     local view = { rows = {}, availableCount = 0, availableCost = 0 }
     local data = TrainerSpells.GetClassData()
@@ -562,10 +629,10 @@ function TrainerSpells.BuildView()
     view.scannedAt = data.scannedAt
     for _, entry in ipairs(data.spells) do
         if type(entry) == "table" and type(entry.name) == "string" then
-            local level = tonumber(entry.level) or 1
+            local level = levelLearned(entry)
             local learned = TrainerSpells.IsEntryLearned(entry, data)
             local availableNow = (not learned) and level <= view.playerLevel
-            if level <= view.maxLevel and (level >= view.playerLevel or not learned) then
+            if level <= view.maxLevel then
                 view.rows[#view.rows + 1] = {
                     name = entry.name,
                     rank = entry.rank,

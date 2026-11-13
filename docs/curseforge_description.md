@@ -13,7 +13,7 @@ A small tactical board for WoW Forever: **buff missing members, cleanse debuffs 
 
 ![Settings window](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/settings_en.png)
 
-*Mock-ups rebuilt from the window sizes, coordinates, colours and strings in the addon code (Priest example). Names are made up.*
+*In-game screenshots (WoW Forever, Korean client). Character and player names and chat text are blurred.*
 
 ## Features
 
@@ -27,7 +27,7 @@ A small tactical board for WoW Forever: **buff missing members, cleanse debuffs 
 
 ### Spells by level
 - Saved when you open your class trainer: every spell and rank with its level and cost.
-- Window with `/ezsc spells`: spells you can learn now are highlighted, learned ones are checked, with the total cost of what you can learn now.
+- Window with `/ezsc spells`: every level, opening at your level. Spells you can learn now are highlighted, first ranks are marked **(new spell)**, others **(Rank N)**, learned ones are checked, with the total cost of what you can learn now.
 - The same list docks next to your spellbook (can be folded or turned off).
 - Spell tooltips show **Next rank: Rank N · Lv** or **Learnable at level: N**.
 - On level-up, chat tells you how many new spells you can learn.
@@ -69,7 +69,7 @@ WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버�
 
 ![설정창](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/settings_ko.png)
 
-*애드온 코드의 창 크기 · 좌표 · 색상 · 문구로 재현한 예시 화면입니다(사제 예시). 이름은 지어낸 예시입니다.*
+*실제 게임 화면입니다(WoW Forever, 한국어 클라이언트). 캐릭터 · 다른 플레이어 이름과 채팅 내용은 가렸습니다.*
 
 ## 기능
 
@@ -83,7 +83,7 @@ WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버�
 
 ### 레벨별 배울 스킬
 - 직업 기술 전문가를 열 때 모든 주문 · 랭크의 레벨과 비용을 저장합니다.
-- `/ezsc spells` 창: 지금 배울 수 있는 주문은 강조, 배운 주문은 체크, 지금 배울 수 있는 주문의 합계 비용 표시.
+- `/ezsc spells` 창: 모든 레벨을 보여 주고 현재 레벨에서 열립니다. 지금 배울 수 있는 주문은 강조, 처음 배우는 주문은 **(새 스킬)**, 나머지는 **(랭크 N)**, 배운 주문은 체크, 지금 배울 수 있는 주문의 합계 비용 표시.
 - 같은 목록이 주문책 옆에 붙습니다(접거나 끌 수 있음).
 - 주문 툴팁에 **다음 랭크: 랭크 N · Lv** 또는 **배울 수 있는 레벨: N** 표시.
 - 레벨이 오르면 새로 배울 수 있는 주문 수를 채팅창에 알려 줍니다.

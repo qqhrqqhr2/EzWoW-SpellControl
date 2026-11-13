@@ -39,9 +39,28 @@ function SpellsByLevelUI.FormatMoney(copper)
     return table.concat(parts, " ")
 end
 
+-- the client's rank text reads like a level ("2 레벨"): show "Rank 2"
+local function rankText(rank)
+    local num = ns.TrainerSpells and ns.TrainerSpells.RankNumber and ns.TrainerSpells.RankNumber(rank)
+    if num then return string.format(ns:L("SBL_RANK"), num) end
+    return rank
+end
+
+-- a spell learned for the first time: rank 1, or a spell without ranks
+local function isNewSpell(row)
+    local rankNumber = ns.TrainerSpells and ns.TrainerSpells.RankNumber
+    local num = rankNumber and rankNumber(row.rank)
+    return num == nil or num == 1
+end
+
+local NEW_R, NEW_G, NEW_B = 1, 0.82, 0
+
 local function spellLabel(row)
+    if isNewSpell(row) and not row.learned then
+        return row.name .. " |cffffd100(" .. ns:L("SBL_NEW_SPELL") .. ")|r"
+    end
     if row.rank and row.rank ~= "" then
-        return row.name .. " |cffA7B9C5(" .. row.rank .. ")|r"
+        return row.name .. " |cffA7B9C5(" .. rankText(row.rank) .. ")|r"
     end
     return row.name
 end
@@ -90,7 +109,7 @@ local function rowOnEnter(row)
     end
     if not shown then
         GameTooltip:SetText(data.name, 1, 1, 1)
-        if data.rank then GameTooltip:AddLine(data.rank, 0.655, 0.725, 0.773) end
+        if data.rank then GameTooltip:AddLine(rankText(data.rank), 0.655, 0.725, 0.773, true) end
         GameTooltip:AddLine(string.format(ns:L("SBL_REQ_LEVEL"), data.level), 0.929, 0.957, 0.969)
     end
     GameTooltip:AddLine(ns:L("SBL_COST") .. ": " .. SpellsByLevelUI.FormatMoney(data.cost), 0.929, 0.957, 0.969)
@@ -153,11 +172,17 @@ local function createRow(list)
     return row
 end
 
-local function setupHeaderRow(row, text)
+-- current: the "your level" line (highlighted)
+local function setupHeaderRow(row, text, current)
     row.data = nil
     row:EnableMouse(false)
     row:SetHeight(HEADER_H)
-    row.bg:Hide()
+    row.bg:SetShown(current and true or false)
+    if current then
+        row.header:SetTextColor(1, 0.82, 0)
+    else
+        row.header:SetTextColor(ACCENT_R, ACCENT_G, ACCENT_B)
+    end
     row.icon:Hide()
     row.check:Hide()
     row.text:Hide()
@@ -202,6 +227,10 @@ local function setupSpellRow(list, row, data)
         row:SetAlpha(0.45)
         row.text:SetTextColor(0.655, 0.725, 0.773)
         row.icon:SetDesaturated(true)
+    elseif isNewSpell(data) then
+        row:SetAlpha(1)
+        row.text:SetTextColor(NEW_R, NEW_G, NEW_B)
+        row.icon:SetDesaturated(false)
     elseif data.availableNow then
         row:SetAlpha(1)
         row.text:SetTextColor(ACCENT_R, ACCENT_G, ACCENT_B)
@@ -253,6 +282,7 @@ function SpellsByLevelUI.RenderList(list, view)
     if width and width > 0 then list.content:SetWidth(width) end
 
     local used, y = 0, 0
+    local markerY
     local function nextRow()
         used = used + 1
         local row = list.rows[used]
@@ -276,7 +306,18 @@ function SpellsByLevelUI.RenderList(list, view)
     else
         list.empty:Hide()
         local lastLevel
+        local function addMarker()
+            local marker = nextRow()
+            setupHeaderRow(marker, string.format(ns:L("SBL_CURRENT_LEVEL"), view.playerLevel or 1), true)
+            markerY = y
+            y = y + HEADER_H
+        end
         for _, data in ipairs(view.rows) do
+            if not markerY and data.level >= (view.playerLevel or 1) then
+                addMarker()
+                -- the marker names the level already
+                if data.level == view.playerLevel then lastLevel = data.level end
+            end
             if not list.compact and data.level ~= lastLevel then
                 lastLevel = data.level
                 local header = nextRow()
@@ -287,6 +328,7 @@ function SpellsByLevelUI.RenderList(list, view)
             setupSpellRow(list, row, data)
             y = y + row:GetHeight()
         end
+        if not markerY then addMarker() end
     end
     for index = used + 1, #list.rows do
         list.rows[index]:Hide()
@@ -294,6 +336,18 @@ function SpellsByLevelUI.RenderList(list, view)
     end
     list.content:SetHeight(math.max(y, 1))
     if list.scroll.UpdateScrollChildRect then list.scroll:UpdateScrollChildRect() end
+
+    -- on opening, start at the player's level (a few rows above it stay in view)
+    if list.wantScroll and markerY then
+        list.wantScroll = false
+        local scroll = list.scroll
+        local function jump()
+            local range = scroll:GetVerticalScrollRange() or 0
+            scroll:SetVerticalScroll(math.max(0, math.min(range, markerY - 3 * ROW_H)))
+        end
+        jump()
+        if C_Timer and C_Timer.After then C_Timer.After(0, jump) end
+    end
 end
 
 local function summaryText(view)
@@ -377,7 +431,10 @@ function ns:CreateSpellsByLevelWindow()
     list.scroll:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -32, 12)
     win.list = list
 
-    win:SetScript("OnShow", function() ns:RefreshSpellsByLevel() end)
+    win:SetScript("OnShow", function()
+        list.wantScroll = true
+        ns:RefreshSpellsByLevel()
+    end)
 
     self.spellsByLevelFrame = win
     return win
@@ -493,6 +550,7 @@ function ns:UpdateSpellbookPanel()
     local okHeight, bookHeight = pcall(outer.GetHeight, outer)
     bookHeight = (okHeight and tonumber(bookHeight)) or 420
     panel:SetSize(280, math.max(240, math.min(bookHeight - 4, 620)))
+    if not (panel:IsShown() and panel.list.scroll:IsShown()) then panel.list.wantScroll = true end
     panel.title:Show()
     panel.summary:Show()
     panel.list.scroll:Show()

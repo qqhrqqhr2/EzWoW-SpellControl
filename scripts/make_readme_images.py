@@ -492,17 +492,19 @@ T = {
     "ko": {
         "lead": "파티 버프 · 디버프 해제 · 메즈를 클릭 한 번으로, 레벨별로 배울 주문과 추천 특성까지 (사제 예시)",
         "me": "나", "party": ["들꽃노래", "잿빛서리", "검은송곳"], "enemy": "해골 마법사",
-        "cls": "사제", "scanned": "2026-11-06 21:14",
+        "cls": "사제", "scanned": "2026-11-06 21:14", "level": 20,
         "spells": [
-            (18, "신의 권능: 보호막", "랭크 3", 9000, "shield", "learned"),
-            (18, "소생", "랭크 3", 9000, "heal", "learned"),
-            (20, "순간 치유", "랭크 1", 18000, "holy", "now"),
-            (20, "신성한 불꽃", "랭크 1", 18000, "fire", "now"),
-            (20, "소실", "랭크 1", 18000, "stealth", "now"),
-            (22, "정신 분열", "랭크 4", 22000, "shadow", ""),
-            (24, "신의 권능: 인내", "랭크 3", 30000, "holy", ""),
-            (24, "마나 연소", "랭크 1", 30000, "arcane", ""),
-            (26, "어둠의 권능: 고통", "랭크 4", 36000, "shadow", ""),
+            (16, "정신 분열", 2, 6000, "shadow", "learned"),
+            (18, "신의 권능: 보호막", 3, 9000, "shield", "learned"),
+            (18, "어둠의 권능: 고통", 3, 9000, "shadow", "learned"),
+            (20, "순간 치유", 1, 18000, "holy", "now"),
+            (20, "신성한 불꽃", 1, 18000, "fire", "now"),
+            (20, "소생", 3, 18000, "heal", "now"),
+            (22, "정신 분열", 3, 22000, "shadow", ""),
+            (22, "강타", 4, 22000, "holy", ""),
+            (24, "신의 권능: 인내", 3, 30000, "holy", ""),
+            (24, "마나 연소", 1, 30000, "arcane", ""),
+            (26, "어둠의 권능: 고통", 4, 36000, "shadow", ""),
         ],
         "book": "주문책", "chat": "EzWoW - Spell Control:",
         "tipA": ("신의 권능: 인내", "랭크 2", ["마나 105", "30 미터 사거리", "즉시 시전"], "대상의 체력을 30분 동안 8만큼 증가시킵니다."),
@@ -534,17 +536,19 @@ T = {
     "en": {
         "lead": "One-click party buffs, cleanses and crowd control, plus spells by level and recommended talents (Priest example)",
         "me": "Me", "party": ["Wildsong", "Ashfrost", "Darkfang"], "enemy": "Skeletal Mage",
-        "cls": "Priest", "scanned": "2026-11-06 21:14",
+        "cls": "Priest", "scanned": "2026-11-06 21:14", "level": 20,
         "spells": [
-            (18, "Power Word: Shield", "Rank 3", 9000, "shield", "learned"),
-            (18, "Renew", "Rank 3", 9000, "heal", "learned"),
-            (20, "Flash Heal", "Rank 1", 18000, "holy", "now"),
-            (20, "Holy Fire", "Rank 1", 18000, "fire", "now"),
-            (20, "Fade", "Rank 1", 18000, "stealth", "now"),
-            (22, "Mind Blast", "Rank 4", 22000, "shadow", ""),
-            (24, "Power Word: Fortitude", "Rank 3", 30000, "holy", ""),
-            (24, "Mana Burn", "Rank 1", 30000, "arcane", ""),
-            (26, "Shadow Word: Pain", "Rank 4", 36000, "shadow", ""),
+            (16, "Mind Blast", 2, 6000, "shadow", "learned"),
+            (18, "Power Word: Shield", 3, 9000, "shield", "learned"),
+            (18, "Shadow Word: Pain", 3, 9000, "shadow", "learned"),
+            (20, "Flash Heal", 1, 18000, "holy", "now"),
+            (20, "Holy Fire", 1, 18000, "fire", "now"),
+            (20, "Renew", 3, 18000, "heal", "now"),
+            (22, "Mind Blast", 3, 22000, "shadow", ""),
+            (22, "Smite", 4, 22000, "holy", ""),
+            (24, "Power Word: Fortitude", 3, 30000, "holy", ""),
+            (24, "Mana Burn", 1, 30000, "arcane", ""),
+            (26, "Shadow Word: Pain", 4, 36000, "shadow", ""),
         ],
         "book": "Spellbook", "chat": "EzWoW - Spell Control:",
         "tipA": ("Power Word: Fortitude", "Rank 2", ["105 Mana", "30 yd range", "Instant"], "Power infuses the target increasing their Stamina by 8 for 30 min."),
@@ -636,22 +640,49 @@ def board(ctx, lang):
 
 
 def spell_rows(ctx, lang, compact, width):
-    """RenderList of UI/SpellsByLevel.lua. Returns html of the rows (game px) and the height."""
+    """RenderList of UI/SpellsByLevel.lua: every level, a highlighted "your level" line before the
+    first row at or above the player's level, rank 1 / rankless unlearned rows marked as new spells
+    (gold), and the list scrolled to that line minus 3 rows as on opening.
+    Returns html of the rows (game px) and the height."""
     t, L, c = T[lang], ctx["L"][lang], ctx["sbl"]
     acc = css(ctx["th"]["accent"])
-    p, y, last = [], 0, None
+    new_col = "#ffd100"   # NEW_R, NEW_G, NEW_B = 1, 0.82, 0
+    p, y, last, marker_y = [], 0, None, None
+
+    def header(label, current=False):
+        nonlocal y
+        if current:
+            p.append(box(0, y, width, c["HEADER_H"], f"background:{css(ctx['th']['accent'], .14)}"))
+        p.append(text_top(4, y + c["HEADER_H"] - 5 - 13, esc(label), 12, new_col if current else acc))
+        p.append(box(0, y + c["HEADER_H"] - 3, width, 1, "background:rgba(52,76,91,.85)"))
+        y += c["HEADER_H"]
+
     for lvl, name, rank, cost, icon, state in t["spells"]:
+        if marker_y is None and lvl >= t["level"]:
+            marker_y = y
+            header(L["SBL_CURRENT_LEVEL"].replace("%d", str(t["level"])), True)
+            if lvl == t["level"]:
+                last = lvl          # the marker names the level already
         if not compact and lvl != last:
             last = lvl
-            p.append(text_top(4, y + c["HEADER_H"] - 5 - 13, esc(L["SBL_LEVEL"].replace("%d", str(lvl))), 12, acc))
-            p.append(box(0, y + c["HEADER_H"] - 3, width, 1, "background:rgba(52,76,91,.85)"))
-            y += c["HEADER_H"]
+            header(L["SBL_LEVEL"].replace("%d", str(lvl)))
         h = c["COMPACT_ROW_H"] if compact else c["ROW_H"]
         cost_w = 74 if compact else 96
-        label = f'{esc(name)} <span style="color:#A7B9C5">({esc(rank)})</span>'
+        is_new = rank in (None, 1) and state != "learned"
+        if is_new:
+            label = f'{esc(name)} <span style="color:{new_col}">({esc(L["SBL_NEW_SPELL"])})</span>'
+        else:
+            label = f'{esc(name)} <span style="color:#A7B9C5">({esc(L["SBL_RANK"].replace("%d", str(rank)))})</span>'
         if compact:
             label = f"Lv {lvl} · " + label
-        col = {"learned": "#A7B9C5", "now": acc}.get(state, "#EDF4F7")
+        if state == "learned":
+            col = "#A7B9C5"
+        elif is_new:
+            col = new_col
+        elif state == "now":
+            col = acc
+        else:
+            col = "#EDF4F7"
         alpha = 0.45 if state == "learned" else 1
         row = []
         if state == "now":
@@ -664,7 +695,9 @@ def spell_rows(ctx, lang, compact, width):
         row.append(text(width - 6, h / 2, money(cost, lang), 10, "#fff", anchor="right"))
         p.append(f'<div class="abs" style="left:0;top:{px(y)};width:{px(width)};height:{px(h)};opacity:{alpha}">{"".join(row)}</div>')
         y += h
-    return "".join(p), y
+    # opened at the player's level: scroll = markerY - 3 * ROW_H
+    off = max(0, (marker_y or 0) - 3 * c["ROW_H"])
+    return f'<div class="abs" style="left:0;top:{px(-off)};width:{px(width)};height:{px(y)}">{"".join(p)}</div>', y - off
 
 
 def scrollbar(x, y, h):

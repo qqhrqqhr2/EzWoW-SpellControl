@@ -27,7 +27,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 ![설정창](docs/images/settings_ko.png)
 
-> 이미지는 애드온 코드의 창 크기 · 좌표 · 색상 · 문구로 재현한 **예시 화면**(사제 예시)입니다. 전술 보드는 칸 크기 40으로 그렸고, 파티원 이름은 지어낸 예시입니다. 주문책과 특성 창은 테두리만 단순하게 그렸습니다.
+> 실제 게임 화면입니다(WoW Forever, 한국어 클라이언트). 캐릭터 · 다른 플레이어 이름과 채팅 내용은 가렸습니다.
 
 ### 설치
 
@@ -35,7 +35,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 2. 캐릭터 선택 화면의 **애드온** 목록에서 켭니다.
 3. 접속하면 전술 보드가 나타납니다. 설정은 `/ezsc` 또는 보드 제목 줄의 톱니바퀴.
 
-### 사용법 (위 그림의 번호)
+### 사용법
 
 | 번호 | 부분 | 설명 |
 |---|---|---|
@@ -44,7 +44,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 | ② | 해제 | 내가 지울 수 있는 디버프(마법 · 저주 · 질병 · 독)에 걸린 파티원만 바로 나타나고 알림음이 울립니다. 테두리 색이 디버프 종류입니다. 독 해제 · 질병 해제 같은 **지속형 해제가 이미 걸려 있으면 `해제중`**으로 표시해 마나 낭비를 막습니다. |
 | ② | 메즈 | 적을 대상으로 잡으면 **생명체 유형**(야수 · 인간형 · 언데드 · 악마 · 정령 · 용족 · 거인 · 기계)과 사거리를 확인해, 걸 수 있는 군중 제어 주문(변이, 언데드 속박, 겨울잠, 추방, 현혹, 실명, 비열한 습격/급소 가격, 얼음의 덫, 공포 등)을 칸에 배치합니다. |
 | ③ | 주문 툴팁 랭크 안내 | 배운 주문의 툴팁에 **다음 랭크: 랭크 N · Lv**, 아직 배우지 않은 랭크의 툴팁에 **배울 수 있는 레벨: N**이 붙습니다. |
-| ④ | 레벨별 배울 스킬 (`/ezsc spells`) | 직업 기술 전문가 창을 열 때 저장한 목록을 레벨별로 보여 줍니다. **지금 배울 수 있는 주문**은 강조색, 이미 배운 주문은 흐리게 체크 표시, 오른쪽은 비용입니다. 위쪽에 지금 배울 수 있는 주문 수와 합계 비용, 제목 아래에 마지막 전문가 방문 시각이 나옵니다. |
+| ④ | 레벨별 배울 스킬 (`/ezsc spells`) | 직업 기술 전문가 창을 열 때 저장한 목록을 모든 레벨에 걸쳐 보여 주고, **현재 레벨** 줄에서 열립니다. **지금 배울 수 있는 주문**은 강조색, 처음 배우는 주문은 노란 **(새 스킬)**, 나머지는 **(랭크 N)**, 이미 배운 주문은 흐리게 체크 표시, 오른쪽은 비용입니다. 위쪽에 지금 배울 수 있는 주문 수와 합계 비용, 제목 아래에 마지막 전문가 방문 시각이 나옵니다. |
 | ⑤ | 주문책 옆 패널 | 주문책을 열면 같은 목록이 주문책 오른쪽에 붙습니다(줄마다 `Lv`). `<` 단추로 접고 `>`로 다시 펼칩니다. |
 | ⑥ | 레벨업 알림 | 레벨이 오르면 새로 배울 수 있는 주문 수를 채팅창에 알려 줍니다(전투 중이면 전투가 끝난 뒤). |
 | ⑦ | 추천 특성 (`/추천특성`) | 특성 창 검색창 왼쪽의 **추천 특성** 단추를 누르면 내 직업의 빌드 목록(`전문화 (역할)  분배`)이 나옵니다. 하나를 고르면 남은 포인트를 넣고, **적용할지 한 번 더 묻습니다**. |
@@ -147,7 +147,7 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 
 ![Settings window](docs/images/settings_en.png)
 
-> These are **mock-ups** (Priest example) rebuilt from the window sizes, coordinates, colours and strings in the code. The board is drawn with cell size 40; party names are made up. The spellbook and talent window are drawn as simple outlines.
+> In-game screenshots (WoW Forever, Korean client). Character and player names and chat text are blurred.
 
 ### Installation
 
@@ -155,7 +155,7 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 2. Enable it in the **AddOns** list on the character select screen.
 3. The board appears after login. Settings: `/ezsc` or the gear on the board's title bar.
 
-### How to use (numbers in the picture)
+### How to use
 
 | No. | Part | Description |
 |---|---|---|
@@ -164,7 +164,7 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 | ② | Cleanse | Members with a debuff you can remove (magic, curse, disease, poison) appear at once with a sound. Border colour = debuff type. If a periodic cleanse (Abolish Poison/Disease) is already running, the cell shows **`Active`** to save mana. |
 | ② | Crowd control | When you target an enemy it checks **creature type** (beast, humanoid, undead, demon, elemental, dragonkin, giant, mechanical) and range, and places usable CC (Polymorph, Shackle Undead, Hibernate, Banish, Seduction, Blind, Sap/Gouge, Freezing Trap, Fear, …). |
 | ③ | Rank hints in spell tooltips | Learned spells show **Next rank: Rank N · Lv**, ranks you have not learned show **Learnable at level: N**. |
-| ④ | Spells by level (`/ezsc spells`) | The list saved from your class trainer, grouped by level. **Spells you can learn now** are highlighted, learned ones are faded with a check, the cost is on the right. The top line shows how many you can learn now and the total cost; the title shows your last trainer visit. |
+| ④ | Spells by level (`/ezsc spells`) | The list saved from your class trainer, every level grouped, opening at **your level**. **Spells you can learn now** are highlighted, first ranks show a yellow **(new spell)**, others **(Rank N)**, learned ones are faded with a check, the cost is on the right. The top line shows how many you can learn now and the total cost; the title shows your last trainer visit. |
 | ⑤ | Spellbook panel | Opening the spellbook docks the same list on its right (with `Lv` on each row). Fold it with `<`, unfold with `>`. |
 | ⑥ | Level-up notice | On level-up, chat tells you how many new spells you can learn (after combat if you are fighting). |
 | ⑦ | Recommended talents (`/eztalent`) | The **Recommended** button left of the talent search box lists your class's builds (`Spec (Role)  split`). Pick one to spend your free points; **you are asked once more before they are applied**. |
