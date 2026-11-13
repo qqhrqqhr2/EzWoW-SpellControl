@@ -27,7 +27,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 ![설정창](docs/images/settings_ko.png)
 
-> 실제 게임 화면입니다(WoW Forever, 한국어 클라이언트). 캐릭터 · 다른 플레이어 이름과 채팅 내용은 가렸습니다.
+> 왼쪽 위젯과 주문 툴팁은 파티 화면을 보여 주려고 애드온 코드로 다시 그린 예시입니다(파티원 이름은 지어낸 이름). 나머지는 실제 게임 화면입니다(WoW Forever, 한국어 클라이언트).
 
 ### 설치
 
@@ -147,7 +147,7 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 
 ![Settings window](docs/images/settings_en.png)
 
-> In-game screenshots with the addon set to English. The game client is Korean, so game text such as zone, item and spell names stays Korean. Character and player names and chat text are blurred.
+> The widget and spell tooltips on the left are a mock-up drawn from the addon code to show a party (made-up names). The rest are in-game screenshots with the addon set to English; the game client is Korean, so game text such as spell names stays Korean.
 
 ### Installation
 
