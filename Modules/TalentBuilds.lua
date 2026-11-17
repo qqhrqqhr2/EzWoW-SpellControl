@@ -148,7 +148,40 @@ local pending   -- { configID, label, count }
 
 local POPUP = "EZWOW_SPELLCONTROL_TALENT_APPLY"
 
+local function acceptPending()
+    local p = pending
+    pending = nil
+    if not p then return end
+    if InCombatLockdown and InCombatLockdown() then
+        rollback(p.configID)
+        say(T("combat"))
+        return
+    end
+    if commit(p.configID) then
+        say(T("applied"):format(p.label, p.count))
+    else
+        say(T("failed"))
+    end
+end
+
+local function cancelPending()
+    local p = pending
+    pending = nil
+    if p then
+        rollback(p.configID)
+        say(T("rolledBack"))
+    end
+end
+
 local function showConfirm(label, count)
+    -- with the gamepad UI on, the game's popup opened from addon code breaks the game's
+    -- gamepad navigation: the EzWoW question window then (Libs/EzWoWGamePad: Confirm)
+    local pad = ns.GamePad
+    if pad and pad.Confirm and pad.IsActive and pad.IsActive() then
+        local ok, text = pcall(string.format, T("confirm"), label or "", count or 0)
+        pad.Confirm((ok and text or "") .. "\n\n|cff8c8c8cEzWoW - Spell Control|r", acceptPending, cancelPending, T("apply"), T("cancel"))
+        return
+    end
     if not StaticPopupDialogs or not StaticPopup_Show then
         say(T("failed"))
         return
@@ -157,30 +190,11 @@ local function showConfirm(label, count)
         text = T("confirm") .. "\n\n|cff8c8c8cEzWoW - Spell Control|r",
         button1 = T("apply"),
         button2 = T("cancel"),
-        OnAccept = function()
-            local p = pending
-            pending = nil
-            if not p then return end
-            if InCombatLockdown and InCombatLockdown() then
-                rollback(p.configID)
-                say(T("combat"))
-                return
-            end
-            if commit(p.configID) then
-                say(T("applied"):format(p.label, p.count))
-            else
-                say(T("failed"))
-            end
-        end,
+        OnAccept = acceptPending,
         OnCancel = function(_, _, reason)
             -- reuse: ApplyTalentBuild already rolled back the old build and staged a new one
             if reason == "override" then return end
-            local p = pending
-            pending = nil
-            if p then
-                rollback(p.configID)
-                say(T("rolledBack"))
-            end
+            cancelPending()
         end,
         timeout = 0,
         noCancelOnReuse = true,
@@ -328,7 +342,10 @@ local function shownHost(scan)
 end
 
 local function createButton(host)
-    button = CreateFrame("Button", nil, host, "UIPanelButtonTemplate")
+    -- made without a parent and put in afterwards: a frame made inside the open talent
+    -- window breaks the game's gamepad navigation (Libs/EzWoWGamePad: MakeFrame)
+    local make = (ns.GamePad and ns.GamePad.MakeFrame) or CreateFrame
+    button = make("Button", nil, host, "UIPanelButtonTemplate")
     button:SetSize(96, 22)
     button:SetText(T("button"))
     button:SetScript("OnClick", function(self) openMenu(self) end)
