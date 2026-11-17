@@ -4,6 +4,14 @@
 --                             Level-up Notice & Spell Tooltip Rank Hints
 --===========================================================================
 local ADDON_NAME, ns = ...
+-- every EzWoW line on the game's tooltips can be turned off at once (Game Menu >
+-- Options > AddOns > EzWoW - Data Sharing; Libs/EzWoWShare TooltipLinesOn)
+local function ezTipsOn()
+    local share = _G.EzWoW_Share
+    if type(share) ~= "table" or type(share.TooltipLinesOn) ~= "function" then return true end
+    local ok, on = pcall(share.TooltipLinesOn)
+    return not ok or on ~= false
+end
 
 -- The "EzWoW - ..." name line at the end of tooltip additions is drawn small.
 -- Shared by the EzWoW addons: the first one loaded sets it up.
@@ -733,6 +741,7 @@ local function tagTooltip(tip)
 end
 
 local function decorateSpellTooltip(tip, spellID)
+    if not ezTipsOn() then return end
     spellID = plain(spellID)
     if type(spellID) ~= "number" or not isDecoratableTooltip(tip) then return end
     local data = TrainerSpells.GetClassData()
