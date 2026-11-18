@@ -1,3 +1,7 @@
-# v2.0.23
+# v2.0.24
 
-- 정식 서버에 맞게 표시 내용을 갱신했습니다. / Updated displayed text for the live realm.
+### 한국어
+- 레벨별 주문 목록의 툴팁에 애드온 이름표가 두 번 나오던 문제를 고쳤습니다.
+
+### English
+- Fixed the addon tag showing twice on spell tooltips in the spells-by-level list.
