@@ -105,7 +105,11 @@ local function rowOnEnter(row)
     GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
     local shown = false
     if data.spellID and type(GameTooltip.SetSpellByID) == "function" then
+        -- (the spell tooltip's own tag waits: one tag goes under the lines added here)
+        local spells = ns.TrainerSpells
+        if spells then spells.holdTag = true end
         shown = pcall(GameTooltip.SetSpellByID, GameTooltip, data.spellID)
+        if spells then spells.holdTag = nil end
     end
     if not shown then
         GameTooltip:SetText(data.name, 1, 1, 1)

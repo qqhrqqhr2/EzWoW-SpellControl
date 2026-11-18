@@ -728,9 +728,12 @@ local function isDecoratableTooltip(tip)
 end
 
 -- Attribution line under this addon's line: once per tooltip display.
+-- TrainerSpells.holdTag: a window of this addon showing a spell adds lines
+-- of its own after the spell's and puts the one tag under them (UI/SpellsByLevel.lua)
 local taggedTooltips = setmetatable({}, { __mode = "k" })
 local tagClearHooked = setmetatable({}, { __mode = "k" })
 local function tagTooltip(tip)
+    if TrainerSpells.holdTag then return end
     if taggedTooltips[tip] or type(tip.AddDoubleLine) ~= "function" then return end
     if not tagClearHooked[tip] and type(tip.HookScript) == "function" then
         tagClearHooked[tip] = true
