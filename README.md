@@ -59,6 +59,8 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 배지 뜻: `거리밖` 사거리 밖 · `완료` 버프 유지 중 · `오프` 오프라인 · `사망` 죽음/유령 · `불가` 걸 수 있는 메즈 없음 · `대기` 대상 대기
 
+칸 아이콘에는 좌클릭 주문의 재사용 대기(공용 재사용 대기 포함)가 행동 단축바처럼 돌아갑니다. 전투 중에도 표시됩니다.
+
 #### 똑똑한 버프 고르기
 
 - **직업별 맞춤**: 나에게만 거는 버프(내면의 열정, 얼음 갑옷, 정의의 격노, 번개 보호막, 악마의 갑옷 등)는 내 칸에서만 검사합니다. 마나가 없는 직업(전사 · 도적)에게는 지능 · 정신력 · 지혜의 축복을 권하지 않습니다. 성기사는 대상의 역할 · 직업에 맞춰 힘 · 지혜 · 왕의 축복을 고릅니다.
@@ -180,6 +182,8 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 | CC | 1st CC (`L:CC`) | 2nd CC (`R:CC`) | **Ctrl + left-click**: 3rd CC |
 
 Badges: `Range` out of range · `OK` buff active · `OFF` offline · `DEAD` dead/ghost · `N/A` no usable CC · `Ready` waiting for target
+
+Cell icons show the cooldown of their left-click spell (global cooldown too), like action buttons, in combat as well.
 
 #### Smart buff choice
 

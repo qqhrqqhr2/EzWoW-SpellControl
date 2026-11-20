@@ -710,7 +710,12 @@ function TacticalUnitBoard.buildSlotVisualHostsOnFrame(parentFrame, anchorTarget
         parentFrame.activeEdges[edge] = resolvedValue
     end
 
-    parentFrame.nameText = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    -- (the name sits on its own frame so it stays above the cooldown swipe)
+    local textHost = CreateFrame("Frame", nil, parentFrame)
+    textHost:EnableMouse(false)
+    textHost:SetAllPoints(anchorTarget)
+    parentFrame.textHost = textHost
+    parentFrame.nameText = textHost:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     parentFrame.nameText:SetPoint("TOPLEFT", anchorTarget, "TOPLEFT", 2, -5)
     parentFrame.nameText:SetPoint("TOPRIGHT", anchorTarget, "TOPRIGHT", -2, -5)
     parentFrame.nameText:SetJustifyH("CENTER")
@@ -1174,7 +1179,25 @@ function TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, frameName, sect
     b.classBar:SetHeight(3)
     b.classBar:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 1)
 
+    -- cooldown of the spell a left click casts, the global cooldown too (like the action
+    -- bars): over the icon, under the name, badges, range shade and the buff overlay
+    local cd = CreateFrame("Cooldown", nil, b, "CooldownFrameTemplate")
+    cd:SetAllPoints(b.icon)
+    cd:EnableMouse(false)
+    if cd.SetDrawEdge then cd:SetDrawEdge(false) end
+    -- (no finish flash: it would go off on every cell after each global cooldown)
+    if cd.SetDrawBling then cd:SetDrawBling(false) end
+    if cd.SetHideCountdownNumbers then cd:SetHideCountdownNumbers(false) end
+    cd:Hide()
+    b.cooldown = cd
+
     TacticalUnitBoard.buildSlotVisualHostsOnFrame(b, b)
+
+    local baseLevel = b:GetFrameLevel()
+    cd:SetFrameLevel(baseLevel + 1)
+    for _, host in ipairs({ b.shadeHost, b.activeEdgeHost, b.textHost, b.inRangeBadgeHost, b.oorBadgeHost }) do
+        host:SetFrameLevel(baseLevel + 2)
+    end
 
     local glow = b:CreateTexture(nil, "HIGHLIGHT")
     glow:SetAllPoints(b.icon)
@@ -1798,6 +1821,120 @@ function TacticalUnitBoard.commitSlotRangeVisual(host, inRangeRaw, inRangeSecret
     end
 end
 
+-----------------------------------------------------------------------------
+-- Cooldown swipe on the cells
+-----------------------------------------------------------------------------
+-- spell whose cooldown a cell shows: the one its left click casts; nil = nothing to show
+function TacticalUnitBoard.cellCooldownSpellID(cell)
+    if not cell or cell._isEmptySlot or not cell:IsShown() then return nil end
+    local role = cell.sectionRole or "BUFF"
+    if role == "CC" then
+        local ccSt = ns.ccTargetState
+        local entry = ccSt and ccSt.primaryUsableEntry
+        local def = (entry and entry.ccDef) or (ns.learnedCCDefs and ns.learnedCCDefs[1])
+        return def and def.id
+    elseif role == "CLEANSE" then
+        return ns.primaryDispelSpell and ns.primaryDispelSpell.id
+    end
+    local choice = ns.GetCellLeftClickChoice and ns:GetCellLeftClickChoice(cell)
+    if not choice then
+        local state = cell.unit and ns.unitStates[cell.unit]
+        choice = state and state.slot1Choice
+    end
+    local rankObj = choice and choice.rankObj
+    if rankObj and rankObj.id then return rankObj.id end
+    local def1 = ns.GetSelectedBuffSlot1Def and ns:GetSelectedBuffSlot1Def()
+    return def1 and def1.highestSingle and def1.highestSingle.id
+end
+
+-- In combat the game gives cooldowns as secret values that addon code can't read or
+-- compare: they are drawn by the game's DurationObject (or handed to SetCooldown unread),
+-- and only drawn again when the game says a cooldown changed (changed = true) or the
+-- cell's spell changed. Out of combat a cooldown is drawn again when its times change.
+function TacticalUnitBoard.refreshCellCooldown(cell, changed)
+    local cd = cell and cell.cooldown
+    if not cd then return end
+    local spellID = TacticalUnitBoard.cellCooldownSpellID(cell)
+    if not spellID or not (C_Spell and type(C_Spell.GetSpellCooldown) == "function") then
+        if cd:IsShown() then cd:Hide() end
+        cell._ezCdSpell, cell._ezCdStart, cell._ezCdDur, cell._ezCdSecret = nil, nil, nil, nil
+        return
+    end
+    if cell._ezCdSpell ~= spellID then
+        cell._ezCdSpell = spellID
+        changed = true
+    end
+    local start, duration, modRate
+    local ok, info = pcall(C_Spell.GetSpellCooldown, spellID)
+    if ok and type(info) == "table" then
+        start, duration, modRate = info.startTime, info.duration, info.modRate
+    end
+    if issecretvalue(start) or issecretvalue(duration) or issecretvalue(modRate) then
+        if changed or not cell._ezCdSecret then
+            local drawn = false
+            if type(C_Spell.GetSpellCooldownDuration) == "function" and type(cd.SetCooldownFromDurationObject) == "function" then
+                local okD, durationObject = pcall(C_Spell.GetSpellCooldownDuration, spellID)
+                if okD and durationObject and pcall(cd.SetCooldownFromDurationObject, cd, durationObject) then
+                    drawn = true
+                end
+            end
+            if not drawn and cd.SetCooldown then
+                pcall(cd.SetCooldown, cd, start, duration)
+            end
+            cell._ezCdSecret = true
+            cell._ezCdStart, cell._ezCdDur = nil, nil
+        end
+        if not cd:IsShown() then cd:Show() end
+        return
+    end
+    cell._ezCdSecret = nil
+    start, duration = tonumber(start) or 0, tonumber(duration) or 0
+    if start > 0 and duration > 0 and (start + duration) > GetTime() then
+        if changed or cell._ezCdStart ~= start or cell._ezCdDur ~= duration then
+            cd:SetCooldown(start, duration, tonumber(modRate) or 1)
+            cell._ezCdStart, cell._ezCdDur = start, duration
+        end
+        if not cd:IsShown() then cd:Show() end
+    else
+        if cd:IsShown() then cd:Hide() end
+        cell._ezCdStart, cell._ezCdDur = nil, nil
+    end
+end
+
+function TacticalUnitBoard.refreshAllCellCooldowns(changed)
+    local board = ns.boardFrame
+    if not board or not board:IsShown() then return end
+    for _, list in ipairs({ board.buffCells or {}, board.cleanseCells or {} }) do
+        for _, cell in ipairs(list) do
+            if cell:IsShown() then
+                TacticalUnitBoard.refreshCellCooldown(cell, changed)
+            end
+        end
+    end
+    local ccCell = board.ccTargetCell
+    if ccCell and ccCell:IsShown() then
+        TacticalUnitBoard.refreshCellCooldown(ccCell, changed)
+    end
+end
+
+-- a cast starts the global cooldown on every cell; several events in one frame are drawn once
+local cooldownEvents = CreateFrame("Frame")
+pcall(cooldownEvents.RegisterEvent, cooldownEvents, "SPELL_UPDATE_COOLDOWN")
+local cooldownRedrawQueued = false
+local function redrawCellCooldowns()
+    cooldownRedrawQueued = false
+    TacticalUnitBoard.refreshAllCellCooldowns(true)
+end
+cooldownEvents:SetScript("OnEvent", function()
+    if cooldownRedrawQueued then return end
+    if C_Timer and C_Timer.After then
+        cooldownRedrawQueued = true
+        C_Timer.After(0, redrawCellCooldowns)
+    else
+        redrawCellCooldowns()
+    end
+end)
+
 function ns:UpdateCCTargetCellVisual()
     local unitBoardFrame = self.boardFrame
     if not unitBoardFrame or not unitBoardFrame.ccTargetCell then return end
@@ -2040,6 +2177,24 @@ function ns:UpdateSingleUnitCellVisualOnly(cell)
         TacticalUnitBoard.fitFontStringToWidth(cell.badgeText, self:L("BADGE_BUFF_OK"), size - 4, 9, 7)
         cell.badgeText:SetTextColor(ACCENT_R, ACCENT_G, ACCENT_B)
         TacticalUnitBoard.commitSlotRangeVisual(cell, inRangeRaw, inRangeSecret, false, size, oorText)
+    end
+end
+
+-- every redraw of a cell also brings its cooldown swipe up to date (the spell its left
+-- click casts may have changed); the CC cell's redraw goes through UpdateCCTargetCellVisual
+local drawUnitCellVisual = ns.UpdateSingleUnitCellVisualOnly
+local drawCCTargetCellVisual = ns.UpdateCCTargetCellVisual
+function ns:UpdateCCTargetCellVisual()
+    drawCCTargetCellVisual(self)
+    local ccCell = self.boardFrame and self.boardFrame.ccTargetCell
+    if ccCell and ccCell:IsShown() then
+        TacticalUnitBoard.refreshCellCooldown(ccCell)
+    end
+end
+function ns:UpdateSingleUnitCellVisualOnly(cell)
+    drawUnitCellVisual(self, cell)
+    if cell and cell.sectionRole ~= "CC" then
+        TacticalUnitBoard.refreshCellCooldown(cell)
     end
 end
 

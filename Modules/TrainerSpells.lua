@@ -233,13 +233,85 @@ end
 function TrainerSpells.GetClassData(classToken)
     local db = EzWoW_SpellControlDB
     if not db or type(db.trainerSpells) ~= "table" then return nil end
-    classToken = classToken or ns.playerClass or select(2, UnitClass("player"))
+    local myClass = select(2, UnitClass("player"))
+    classToken = classToken or ns.playerClass or myClass
     local data = classToken and db.trainerSpells[classToken]
     if type(data) == "table" and type(data.spells) == "table" and #data.spells > 0 then
+        -- a list a weapon master or riding trainer stored before that was
+        -- checked (checked once, with this class's spellbook)
+        if not data.classChecked and classToken == myClass then
+            if not TrainerSpells.LooksLikeClassList(data.spells) then
+                db.trainerSpells[classToken] = nil
+                return nil
+            end
+            data.classChecked = true
+        end
         TrainerSpells.CleanEntries(data)
         return data
     end
     return nil
+end
+
+-- Names and IDs of the spells in the class tabs of the spellbook: every tab
+-- after the first ("General" holds racials, riding and professions).
+local function classTabSpells()
+    local ids, names = {}, {}
+    local function add(name, spellID)
+        name, spellID = plain(name), plain(spellID)
+        if type(name) == "string" and name ~= "" then names[name] = true end
+        if type(spellID) == "number" then ids[spellID] = true end
+    end
+    if C_SpellBook and type(C_SpellBook.GetNumSpellBookSkillLines) == "function"
+        and type(C_SpellBook.GetSpellBookSkillLineInfo) == "function"
+        and type(C_SpellBook.GetSpellBookItemInfo) == "function" then
+        local bank = (Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player) or 0
+        local okLines, numLines = pcall(C_SpellBook.GetNumSpellBookSkillLines)
+        numLines = (okLines and tonumber(plain(numLines))) or 0
+        for lineIndex = 2, numLines do
+            local okLine, line = pcall(C_SpellBook.GetSpellBookSkillLineInfo, lineIndex)
+            if okLine and type(line) == "table" and line.itemIndexOffset and line.numSpellBookItems then
+                for slot = line.itemIndexOffset + 1, line.itemIndexOffset + line.numSpellBookItems do
+                    local okInfo, info = pcall(C_SpellBook.GetSpellBookItemInfo, slot, bank)
+                    if okInfo and type(info) == "table" then add(info.name, info.spellID) end
+                end
+            end
+        end
+    elseif type(GetNumSpellTabs) == "function" and type(GetSpellTabInfo) == "function"
+        and type(GetSpellBookItemName) == "function" then
+        local bookType = BOOKTYPE_SPELL or "spell"
+        local okTabs, numTabs = pcall(GetNumSpellTabs)
+        numTabs = (okTabs and tonumber(numTabs)) or 0
+        for tab = 2, numTabs do
+            local okTab, _, _, offset, numSlots = pcall(GetSpellTabInfo, tab)
+            if okTab and offset and numSlots then
+                for slot = offset + 1, offset + numSlots do
+                    local spellID
+                    if type(GetSpellBookItemInfo) == "function" then
+                        local okItem, _, id = pcall(GetSpellBookItemInfo, slot, bookType)
+                        if okItem then spellID = id end
+                    end
+                    local okNm, name = pcall(GetSpellBookItemName, slot, bookType)
+                    add(okNm and name or nil, spellID)
+                end
+            end
+        end
+    end
+    return ids, names
+end
+
+-- true for a class trainer's list: some entry is a spell of the class tabs.
+-- With no spellbook to read, only a long list counts (a class trainer lists
+-- every level; weapon masters and riding trainers a handful).
+function TrainerSpells.LooksLikeClassList(list)
+    if type(list) ~= "table" then return false end
+    local ids, names = classTabSpells()
+    if next(ids) == nil and next(names) == nil then return #list >= 15 end
+    for _, entry in ipairs(list) do
+        if type(entry) == "table" and ((entry.spellID and ids[entry.spellID]) or (entry.name and names[entry.name])) then
+            return true
+        end
+    end
+    return false
 end
 
 -- Lists saved before the service type was read right carry it as the rank
@@ -415,19 +487,11 @@ function TrainerSpells.ScanTrainer()
     if not classToken then return end
     db.trainerSpells = (type(db.trainerSpells) == "table") and db.trainerSpells or {}
 
-    -- A class trainer always lists some spell the player already has. A list
-    -- with none of them (e.g. a hunter's pet trainer) must not replace a
-    -- class list that is already stored.
-    local previous = db.trainerSpells[classToken]
-    if type(previous) == "table" and type(previous.spells) == "table" and #previous.spells > 0 then
-        TrainerSpells.InvalidateKnown()
-        local knownAny = false
-        for _, entry in ipairs(list) do
-            local okKnown, known = pcall(TrainerSpells.IsEntryLearned, entry, nil)
-            if okKnown and known then knownAny = true break end
-        end
-        if not knownAny then return end
-    end
+    -- Only a class trainer's list is kept. Weapon masters and riding trainers
+    -- list skills the player may already have too (2026-11-18 they replaced a
+    -- druid's whole list), and a pet trainer lists none; none of them lists a
+    -- spell of the spellbook's class tabs.
+    if not TrainerSpells.LooksLikeClassList(list) then return end
 
     db.trainerSpells[classToken] = {
         scannedAt = time and time() or 0,
@@ -732,13 +796,31 @@ end
 -- of its own after the spell's and puts the one tag under them (UI/SpellsByLevel.lua)
 local taggedTooltips = setmetatable({}, { __mode = "k" })
 local tagClearHooked = setmetatable({}, { __mode = "k" })
+-- true / false: the tag line is on the tooltip or not; nil: the lines can't be read
+local function hasTagLine(tip)
+    local tipName = type(tip.GetName) == "function" and plain(tip:GetName())
+    if type(tipName) ~= "string" or type(tip.NumLines) ~= "function" then return nil end
+    local ok, count = pcall(tip.NumLines, tip)
+    count = ok and plain(count)
+    if type(count) ~= "number" then return nil end
+    local title = ns:L("ADDON_TITLE")
+    for lineIdx = count, 1, -1 do
+        local right = _G[tipName .. "TextRight" .. lineIdx]
+        if right and right:IsShown() and plain(right:GetText()) == title then return true end
+    end
+    return false
+end
 local function tagTooltip(tip)
     if TrainerSpells.holdTag then return end
-    if taggedTooltips[tip] or type(tip.AddDoubleLine) ~= "function" then return end
+    if type(tip.AddDoubleLine) ~= "function" then return end
     if not tagClearHooked[tip] and type(tip.HookScript) == "function" then
         tagClearHooked[tip] = true
         pcall(tip.HookScript, tip, "OnTooltipCleared", function(self) taggedTooltips[self] = nil end)
     end
+    -- The mark can outlive its line: the game redraws an action button tooltip without
+    -- clearing it first, so the mark said "tagged" and the tag only came with the next
+    -- redraw a frame later (the tooltip jumped wider). The line itself decides.
+    if taggedTooltips[tip] and hasTagLine(tip) ~= false then return end
     taggedTooltips[tip] = true
     tip:AddDoubleLine(" ", ns:L("ADDON_TITLE"), 0, 0, 0, 0.5, 0.5, 0.5)
 end
