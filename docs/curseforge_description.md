@@ -9,7 +9,7 @@ CurseForge summary (KO): 파티 버프 · 디버프 해제 · 적 대상 메즈�
 
 A small tactical board for WoW Forever: **buff missing members, cleanse debuffs and crowd-control enemies with one click**. It reads only the active spells you have learned and shows just the units that need something. It also keeps track of **the spells you can learn at each level** after you visit your class trainer, and adds **recommended talent builds** to the talent window.
 
-![Tactical board and spells by level](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/ui_en.png)
+![Tactical board, spellbook and spells by level](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/ui_en.png)
 
 ![Settings window](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/settings_en.png)
 
@@ -24,6 +24,7 @@ A small tactical board for WoW Forever: **buff missing members, cleanse debuffs 
 - Smart choices: class-aware buffs, auto-downranking for low-level members, optional group buffs first, buffs about to expire count as missing.
 - Buff cells switch to `OK` as soon as the buff is back on, even in combat.
 - Raid groups you look after, separate party and raid cell sizes, lock, fold, reorder sections, show only on mouseover.
+- The frame and buttons appear after you keep the mouse on the title bar for 1 second (not when you just pass over it).
 
 ### Spells by level
 - Saved when you open your class trainer: every spell and rank with its level and cost.
@@ -65,7 +66,7 @@ Languages: English, 한국어, Deutsch, Français, Español, Русский, 简
 
 WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버프 해제 · 적 대상 메즈를 클릭 한 번으로** 합니다. 마법책에서 실제로 배운 액티브 주문만 읽어 필요한 대상만 보여 줍니다. 직업 기술 전문가를 한 번 방문하면 **레벨별로 배울 주문**도 알려 주고, 특성 창에는 **직업별 추천 특성**을 넣어 줍니다.
 
-![전술 보드와 레벨별 배울 스킬](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/ui_ko.png)
+![전술 보드, 마법책과 레벨별 배울 스킬](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/ui_ko.png)
 
 ![설정창](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/settings_ko.png)
 
@@ -80,6 +81,7 @@ WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버�
 - 똑똑한 선택: 직업별 맞춤 버프, 저레벨 대상 자동 하향, 단체 버프 우선(선택), 곧 끝나는 버프도 빠진 것으로 표시.
 - 버프 칸은 전투 중에도 버프가 다시 걸리면 바로 `완료`로 바뀝니다.
 - 담당 공대 파티 선택, 파티 · 공대 칸 크기 따로, 잠금 · 접기 · 섹션 순서 변경, 마우스 올릴 때만 표시.
+- 테두리와 버튼은 제목 줄에 마우스를 1초 올려 두면 나옵니다(지나가기만 할 때는 나오지 않음).
 
 ### 레벨별 배울 스킬
 - 직업 기술 전문가를 열 때 모든 주문 · 랭크의 레벨과 비용을 저장합니다.

@@ -23,7 +23,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 ### 화면 미리보기
 
-![전술 보드와 레벨별 배울 스킬](docs/images/ui_ko.png)
+![전술 보드, 마법책과 레벨별 배울 스킬](docs/images/ui_ko.png)
 
 ![설정창](docs/images/settings_ko.png)
 
@@ -147,7 +147,7 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 
 ### Screenshots
 
-![Tactical board and spells by level](docs/images/ui_en.png)
+![Tactical board, spellbook and spells by level](docs/images/ui_en.png)
 
 ![Settings window](docs/images/settings_en.png)
 
