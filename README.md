@@ -39,7 +39,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 | 번호 | 부분 | 설명 |
 |---|---|---|
-| ① | 제목 줄 | 마우스를 올리면 **접기/펼치기 · 잠금/해제 · 설정(톱니바퀴)** 버튼이 나타납니다. **Ctrl + 제목 좌클릭 드래그**로 언제든 이동하고, 오른쪽 아래 모서리로 크기를 바꿉니다. 잠금을 풀면 섹션 제목을 위 · 아래로 끌어 **섹션 순서**를 바꿀 수 있습니다. |
+| ① | 제목 줄 | 마우스를 **1초 동안** 올려 두면 테두리와 **접기/펼치기 · 잠금/해제 · 설정(톱니바퀴)** 버튼이 나타나고, 마우스가 창 안에 있는 동안 유지됩니다. **Ctrl + 제목 좌클릭 드래그**로 언제든 이동하고, 오른쪽 아래 모서리로 크기를 바꿉니다. 잠금을 풀면 섹션 제목을 위 · 아래로 끌어 **섹션 순서**를 바꿀 수 있습니다. |
 | ② | 버프 | 버프가 빠진 파티 · 공격대원, 나(솔로 표시 옵션), 파티 밖 우호적 대상만 보입니다. 칸 위쪽은 이름, 아래쪽은 배지입니다. 공격대에서는 **담당 공대 파티**로 고른 파티만 나오고 파티마다 새 줄에서 시작합니다. |
 | ② | 해제 | 내가 지울 수 있는 디버프(마법 · 저주 · 질병 · 독)에 걸린 파티원만 바로 나타나고 알림음이 울립니다. 테두리 색이 디버프 종류입니다. 독 해제 · 질병 해제 같은 **지속형 해제가 이미 걸려 있으면 `해제중`**으로 표시해 마나 낭비를 막습니다. |
 | ② | 메즈 | 적을 대상으로 잡으면 **생명체 유형**(야수 · 인간형 · 언데드 · 악마 · 정령 · 용족 · 거인 · 기계)과 사거리를 확인해, 걸 수 있는 군중 제어 주문(변이, 언데드 속박, 겨울잠, 추방, 현혹, 실명, 비열한 습격/급소 가격, 얼음의 덫, 공포 등)을 칸에 배치합니다. |
@@ -163,7 +163,7 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 
 | No. | Part | Description |
 |---|---|---|
-| ① | Title bar | Hover for **fold/unfold · lock/unlock · settings (gear)**. **Ctrl + left-drag the title** moves it any time; resize from the bottom-right corner. While unlocked, drag section headers up/down to **reorder sections**. |
+| ① | Title bar | Keep the mouse on it for **1 second** to bring up the frame and **fold/unfold · lock/unlock · settings (gear)**; they stay while the mouse is on the window. **Ctrl + left-drag the title** moves it any time; resize from the bottom-right corner. While unlocked, drag section headers up/down to **reorder sections**. |
 | ② | Buffs | Only party/raid members missing a buff, yourself (solo option) and a friendly non-party target. Name on top of the cell, badge at the bottom. In a raid only the **raid groups** you picked get cells, each group on a new row. |
 | ② | Cleanse | Members with a debuff you can remove (magic, curse, disease, poison) appear at once with a sound. Border colour = debuff type. If a periodic cleanse (Abolish Poison/Disease) is already running, the cell shows **`Active`** to save mana. |
 | ② | Crowd control | When you target an enemy it checks **creature type** (beast, humanoid, undead, demon, elemental, dragonkin, giant, mechanical) and range, and places usable CC (Polymorph, Shackle Undead, Hibernate, Banish, Seduction, Blind, Sap/Gouge, Freezing Trap, Fear, …). |

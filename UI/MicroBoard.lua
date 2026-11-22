@@ -64,6 +64,15 @@ local hoverUI = false
 local hoverUIActive = false
 local hoverExitElapsed = 0
 local draggingTitle = false
+-- The board's frame, outline and buttons come up only after the mouse has stayed on the title for
+-- TITLE_HOVER_DELAY seconds (2026-11-22, user: passing over the title lit the board up); dragging the
+-- title brings them at once. Once up they stay while the mouse is on the board.
+local TITLE_HOVER_DELAY = 1
+local titleHoverSince = nil
+function TacticalUnitBoard.titleHoverDue(since, now, overTitle)
+    if not overTitle or type(since) ~= "number" or type(now) ~= "number" then return false end
+    return now - since >= TITLE_HOVER_DELAY
+end
 
 function TacticalUnitBoard.fitFontStringToWidth(fs, text, maxWidth, baseSize, minSize)
     if not fs then return end
@@ -1384,6 +1393,7 @@ function ns:BuildTacticalUnitBoard()
         if not IsControlKeyDown() and (EzWoW_SpellControlDB and EzWoW_SpellControlDB.lockBoard) then return end
         draggingTitle = true
         unitBoardFrame:StartMoving()
+        if not hoverUI then ns:ShowHoverUI(true) end
     end)
     titleHover:SetScript("OnDragStop", function()
         if not draggingTitle then return end
@@ -1392,7 +1402,7 @@ function ns:BuildTacticalUnitBoard()
         TacticalUnitBoard.persistBoardPosition(unitBoardFrame)
     end)
     titleHover:SetScript("OnEnter", function(self)
-        ns:ShowHoverUI(true)
+        titleHoverSince = GetTime()
         GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
         GameTooltip:SetText(ns:L("ADDON_TITLE"), ACCENT_R, ACCENT_G, ACCENT_B)
         GameTooltip:AddLine(ns:L("TITLE_HELP_1"), 0.929, 0.957, 0.969, true)
@@ -1401,6 +1411,7 @@ function ns:BuildTacticalUnitBoard()
         GameTooltip:Show()
     end)
     titleHover:SetScript("OnLeave", function()
+        titleHoverSince = nil
         GameTooltip:Hide()
     end)
     unitBoardFrame.titleHover = titleHover
@@ -1521,6 +1532,15 @@ function ns:BuildTacticalUnitBoard()
 
     unitBoardFrame:HookScript("OnUpdate", function(_, elapsed)
         elapsed = elapsed or 0
+        if not hoverUI and titleHoverSince then
+            local overTitle = unitBoardFrame.titleHover and unitBoardFrame.titleHover:IsMouseOver()
+            if not overTitle then
+                titleHoverSince = nil
+            elseif TacticalUnitBoard.titleHoverDue(titleHoverSince, GetTime(), overTitle) then
+                titleHoverSince = nil
+                ns:ShowHoverUI(true)
+            end
+        end
         if hoverUI then
             if draggingTitle or draggingCategory or unitBoardFrame:IsMouseOver() or (unitBoardFrame.resizeGrip and unitBoardFrame.resizeGrip:IsMouseOver()) then
                 hoverExitElapsed = 0
