@@ -1,9 +1,13 @@
-# v2.0.26
+# v2.0.27
 
 ### 한국어
-- 테두리와 버튼은 제목 줄에 마우스를 1초 올려 두면 나옵니다(지나가기만 할 때는 나오지 않음).
-- 게임의 채팅 채널 창을 열 때 "조금 천천히" 경고가 뜨던 문제를 수정했습니다.
+- 내 소환수와 파티원 소환수도 버프 보드에 칸이 생겨 전투 중에도 버프·해제를 할 수 있습니다(설정에서 끌 수 있음).
+- 파티 밖 소환수를 대상으로 잡아도 버프 칸이 나옵니다.
+- 우호적 대상 칸 자리를 늘 두어, 전투 중에 새로 잡은 대상에게도 버프를 줄 수 있습니다(설정에서 끌 수 있음).
+- 야생의 선물 · 기원 · 신비한 총명함 · 상급 축복 같은 단체 버프를 배우면, 빠진 사람이 3명 이상이고 재료가 있을 때 자동으로 단체 버프를 겁니다(성기사 상급 축복은 직업마다, 재료가 없으면 1인 버프).
 
 ### English
-- The frame and buttons now appear after keeping the mouse on the title bar for 1 second (not when just passing over).
-- Fixed a "slow down" warning when opening the game's chat channel window.
+- Your pet and your party's pets now get cells on the buff board, so they can be buffed and cleansed in combat too (can be turned off).
+- Summons outside your party get the target cell when targeted.
+- The friendly target cell now keeps its place, so a target picked in combat can be buffed too (can be turned off).
+- Learned group buffs (Gift of the Wild, Prayers, Arcane Brilliance, Greater Blessings per class) are now used by themselves when 3 or more people miss the buff and you have the reagent (otherwise the single buff).
