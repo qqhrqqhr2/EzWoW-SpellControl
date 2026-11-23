@@ -40,7 +40,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 | 번호 | 부분 | 설명 |
 |---|---|---|
 | ① | 제목 줄 | 마우스를 **1초 동안** 올려 두면 테두리와 **접기/펼치기 · 잠금/해제 · 설정(톱니바퀴)** 버튼이 나타나고, 마우스가 창 안에 있는 동안 유지됩니다. **Ctrl + 제목 좌클릭 드래그**로 언제든 이동하고, 오른쪽 아래 모서리로 크기를 바꿉니다. 잠금을 풀면 섹션 제목을 위 · 아래로 끌어 **섹션 순서**를 바꿀 수 있습니다. |
-| ② | 버프 | 버프가 빠진 파티 · 공격대원, 나(솔로 표시 옵션), 파티 밖 우호적 대상만 보입니다. 칸 위쪽은 이름, 아래쪽은 배지입니다. 공격대에서는 **담당 공대 파티**로 고른 파티만 나오고 파티마다 새 줄에서 시작합니다. |
+| ② | 버프 | 버프가 빠진 파티 · 공격대원, 나(솔로 표시 옵션), 내 소환수 · 파티원 소환수(공격대에서는 내 소환수만, 따로 한 줄), 대상으로 잡은 파티 밖 우호적 플레이어 · 소환수만 보입니다. 대상 칸은 자리를 늘 두어 전투 중에 새로 잡은 대상에게도 1순위 버프를 걸 수 있습니다(버프 받을 대상이 아니면 빈칸). 칸 위쪽은 이름, 아래쪽은 배지입니다. 공격대에서는 **담당 공대 파티**로 고른 파티만 나오고 파티마다 새 줄에서 시작합니다. |
 | ② | 해제 | 내가 지울 수 있는 디버프(마법 · 저주 · 질병 · 독)에 걸린 파티원만 바로 나타나고 알림음이 울립니다. 테두리 색이 디버프 종류입니다. 독 해제 · 질병 해제 같은 **지속형 해제가 이미 걸려 있으면 `해제중`**으로 표시해 마나 낭비를 막습니다. |
 | ② | 메즈 | 적을 대상으로 잡으면 **생명체 유형**(야수 · 인간형 · 언데드 · 악마 · 정령 · 용족 · 거인 · 기계)과 사거리를 확인해, 걸 수 있는 군중 제어 주문(변이, 언데드 속박, 겨울잠, 추방, 현혹, 실명, 비열한 습격/급소 가격, 얼음의 덫, 공포 등)을 칸에 배치합니다. |
 | ③ | 주문 툴팁 랭크 안내 | 배운 주문의 툴팁에 **다음 랭크: 랭크 N · Lv**, 아직 배우지 않은 랭크의 툴팁에 **배울 수 있는 레벨: N**이 붙습니다. |
@@ -65,7 +65,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 - **직업별 맞춤**: 나에게만 거는 버프(내면의 열정, 얼음 갑옷, 정의의 격노, 번개 보호막, 악마의 갑옷 등)는 내 칸에서만 검사합니다. 마나가 없는 직업(전사 · 도적)에게는 지능 · 정신력 · 지혜의 축복을 권하지 않습니다. 성기사는 대상의 역할 · 직업에 맞춰 힘 · 지혜 · 왕의 축복을 고릅니다.
 - **저레벨 대상 자동 하향**: 저레벨 파티원에게는 그 레벨이 받을 수 있는 가장 높은 단계(`주문이름(X 레벨)`)를 자동으로 계산해 겁니다.
-- **단체 버프 우선**: 야생의 선물, 신비한 총명함, 천상의 기원 등을 배웠다면 먼저 쓰도록 할 수 있습니다.
+- **단체 버프 자동 사용**: 야생의 선물, 신비한 총명함, 인내 · 정신력 · 암흑 보호의 기원 등을 배웠다면, 파티 · 공격대에서 그 버프가 빠진 사람이 3명 이상(받을 사람이 2명이면 둘 다)이고 재료가 가방에 있을 때 버프마다 단체 버프를 겁니다. 성기사의 상급 축복은 같은 직업 모두에게 걸리므로 직업마다 정합니다(한 명뿐이어도). 그 밖에는 1인 버프를 쓰고, 소환수 · 대상 칸은 늘 1인 버프입니다. 재료가 5개보다 적으면 버프 제목 줄에 남은 수가 나옵니다.
 - **만료 임박**: 남은 시간이 설정값(기본 3분)보다 짧은 버프는 빠진 것으로 보고 미리 다시 걸 수 있게 합니다.
 - **랭크 자동 교체**: 새 랭크를 배우면 단축바에 있는 낮은 랭크를 새 랭크로 바꿉니다.
 - **전투 중 버프 상태**: 전투 중에도 버프 칸은 버프가 다시 걸리면 바로 `완료`로 바뀌고, 풀리면 다시 빠진 상태로 보입니다.
@@ -86,9 +86,9 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 | ① | 빠진 버프 자동 추천 (성기사 직업별 맞춤 축복 포함) | 켬 |
 | ① | 저레벨 대상에게 맞는 낮은 단계 버프 자동 시전 | 켬 |
 | ① | 보조 버프(가시 · 정신력 · 내면의 열정 · 갑옷 등) 빠짐도 표시 | 켬 |
-| ① | 파티 전체 버프(선물 · 총명함 · 기원) 우선 사용 | 끔 |
+| ① | 파티 전체 버프 자동 사용 (3명 이상 빠지고 재료가 있을 때) | 켬 |
 | ① | 해제할 디버프가 걸리면 알림음 재생 | 켬 |
-| ① | 혼자 있을 때(솔플)도 내 캐릭터 표시 · 파티원이 아닌 우호적 대상 표시 · 적 대상 메즈 칸 표시 | 켬 |
+| ① | 혼자 있을 때(솔플)도 내 캐릭터 표시 · 파티원이 아닌 우호적 대상 표시 · 우호적 대상 칸 늘 두기 · 소환수 칸 표시 · 적 대상 메즈 칸 표시 | 켬 |
 | ① | 위로 펼치기 (창을 화면 아래쪽에 둘 때) | 끔 |
 | ① | 새 주문 랭크를 배우면 단축바의 낮은 랭크를 자동 교체 | 켬 |
 | ① | 담당 공대 파티 1~8 (끈 파티는 공격대에서 칸이 생기지 않음) | 모두 켬 |
@@ -164,7 +164,7 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 | No. | Part | Description |
 |---|---|---|
 | ① | Title bar | Keep the mouse on it for **1 second** to bring up the frame and **fold/unfold · lock/unlock · settings (gear)**; they stay while the mouse is on the window. **Ctrl + left-drag the title** moves it any time; resize from the bottom-right corner. While unlocked, drag section headers up/down to **reorder sections**. |
-| ② | Buffs | Only party/raid members missing a buff, yourself (solo option) and a friendly non-party target. Name on top of the cell, badge at the bottom. In a raid only the **raid groups** you picked get cells, each group on a new row. |
+| ② | Buffs | Only party/raid members missing a buff, yourself (solo option), your pet and the party's pets (only yours in a raid, on a row of their own) and a targeted friendly player or summon outside the party. The target cell keeps its place, so a target picked in combat can get your first buff too (empty while the target is no such unit). Name on top of the cell, badge at the bottom. In a raid only the **raid groups** you picked get cells, each group on a new row. |
 | ② | Cleanse | Members with a debuff you can remove (magic, curse, disease, poison) appear at once with a sound. Border colour = debuff type. If a periodic cleanse (Abolish Poison/Disease) is already running, the cell shows **`Active`** to save mana. |
 | ② | Crowd control | When you target an enemy it checks **creature type** (beast, humanoid, undead, demon, elemental, dragonkin, giant, mechanical) and range, and places usable CC (Polymorph, Shackle Undead, Hibernate, Banish, Seduction, Blind, Sap/Gouge, Freezing Trap, Fear, …). |
 | ③ | Rank hints in spell tooltips | Learned spells show **Next rank: Rank N · Lv**, ranks you have not learned show **Learnable at level: N**. |
@@ -189,7 +189,7 @@ Cell icons show the cooldown of their left-click spell (global cooldown too), li
 
 - **Class-aware**: self-only buffs (Inner Fire, Ice Armor, Righteous Fury, Lightning Shield, Demon Armor, …) are checked on your own cell only. Intellect, Spirit and Blessing of Wisdom are not suggested for warriors and rogues. Paladins get Might, Wisdom or Kings matched to the target's role and class.
 - **Auto-downranking**: for low-level members the highest rank they can receive (`Spell (Rank X)`) is calculated and cast.
-- **Prefer group buffs**: optionally use Gift of the Wild, Arcane Brilliance, Prayer of Fortitude, … first when learned.
+- **Automatic group buffs**: with Gift of the Wild, Arcane Brilliance, Prayer of Fortitude / Spirit / Shadow Protection, … learned, each group buff is cast in a party or raid when 3 or more of the people it is for (both, if two) miss it and its reagent is in your bags. A paladin's Greater Blessing reaches everyone of one class, so it is decided per class (a single member too). Otherwise the single buff. Pets and the target cell always get the single buff. Under 5 reagents left, the buff header shows the count.
 - **Expiring soon**: buffs with less time left than the setting (3 minutes by default) count as missing, so you can renew them early.
 - **Rank replacement**: after you learn a new rank, lower ranks on your action bars are swapped for it.
 - **Buff state in combat**: buff cells switch to `OK` as soon as the buff is back on, even in combat, and show as missing again when it falls off.
@@ -210,9 +210,9 @@ Cell icons show the cooldown of their left-click spell (global cooldown too), li
 | ① | Auto-suggest missing buffs (includes Paladin class blessings) | On |
 | ① | Auto-cast lower rank buffs on low-level targets | On |
 | ① | Also check secondary buffs (Thorns, Spirit, Inner Fire, Armor) | On |
-| ① | Prefer party/raid group buffs when learned | Off |
+| ① | Group buffs when 3+ miss them and you have the reagent | On |
 | ① | Play sound alert on dispellable debuff | On |
-| ① | Show my character when solo · Show friendly target outside party · Show CC slot when targeting an enemy | On |
+| ① | Show my character when solo · Show friendly target outside party · Always keep the friendly target cell · Show pet cells · Show CC slot when targeting an enemy | On |
 | ① | Expand upward (when placed at bottom of screen) | Off |
 | ① | Replace lower ranks on action bars when a new rank is learned | On |
 | ① | Raid groups 1–8 (groups turned off get no cells in a raid) | All on |

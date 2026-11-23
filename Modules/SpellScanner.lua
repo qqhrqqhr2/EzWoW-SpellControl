@@ -665,6 +665,10 @@ function ns:SelectBuffRankForUnit(unit, buffDef, useGroup)
     end
 
     if not chosen then
+        -- too low for the group buff: the single one (it has lower ranks)
+        if useGroup and ranks == buffDef.learnedGroupRanks then
+            return self:SelectBuffRankForUnit(unit, buffDef, false)
+        end
         return nil, "TOO_LOW", ranks[1]
     end
 
@@ -957,8 +961,7 @@ function ns:GetUnitRangeBoolean(spellName, spellID, unit)
             return true, false
         end
     end
-    local okConn, hasConn = pcall(UnitIsConnected, unit)
-    if okConn and safeVal(hasConn) == false then
+    if not ns.UnitConnected(unit) then
         return false, false
     end
     local okDead, hasDead = pcall(UnitIsDeadOrGhost, unit)
@@ -1306,7 +1309,7 @@ function ns:ScanUnitState(unit)
     else
         unitState.level = unitState.level or 0
     end
-    unitState.isConnected = safeVal(UnitIsConnected(unit)) ~= false
+    unitState.isConnected = ns.UnitConnected(unit)
     unitState.isDead = safeVal(UnitIsDeadOrGhost(unit)) and true or false
 
     unitState.topDebuff = nil
@@ -1603,7 +1606,6 @@ function ns:ScanUnitState(unit)
         return false
     end
 
-    local useGroup = (unit ~= "target") and EzWoW_SpellControlDB and EzWoW_SpellControlDB.preferGroupBuff and true or false
     local smartBuff = not EzWoW_SpellControlDB or (EzWoW_SpellControlDB.smartBuff ~= false)
     local trackSecond = not EzWoW_SpellControlDB or (EzWoW_SpellControlDB.trackSecondBuff ~= false)
     local classToken = self.playerClass
@@ -1615,7 +1617,7 @@ function ns:ScanUnitState(unit)
     local mainBlessingChecked = false
 
     for entryIndex, buffDef in ipairs(candidates) do
-        local allowGroup = useGroup and (entryIndex == 1)
+        local allowGroup = self:GroupBuffOnFor(unit, buffDef, unitState.classFile)
         local rankChoice, errReason, minRankObj = self:SelectBuffRankForUnit(unit, buffDef, allowGroup)
         if rankChoice then
             rankChoice.buffDef = buffDef
@@ -1662,7 +1664,7 @@ function ns:ScanUnitState(unit)
             elseif manualKey2 and manualKey2 ~= "AUTO" then
                 local m2Def = self:GetBuffDefByKey(manualKey2)
                 if m2Def then
-                    local c2Val = self:SelectBuffRankForUnit(unit, m2Def, false)
+                    local c2Val = self:SelectBuffRankForUnit(unit, m2Def, self:GroupBuffOnFor(unit, m2Def, unitState.classFile))
                     if c2Val then
                         c2Val.buffDef = m2Def
                         c2Val.slotIndex = 2
@@ -1694,7 +1696,7 @@ function ns:ScanUnitState(unit)
     else
         local d1Val = self:GetSelectedBuffSlot1Def()
         if d1Val then
-            local c1Val = self:SelectBuffRankForUnit(unit, d1Val, useGroup)
+            local c1Val = self:SelectBuffRankForUnit(unit, d1Val, self:GroupBuffOnFor(unit, d1Val, unitState.classFile))
             if c1Val then
                 c1Val.buffDef = d1Val
                 c1Val.slotIndex = 1
@@ -1709,7 +1711,7 @@ function ns:ScanUnitState(unit)
 
         local d2Val = self:GetSelectedBuffSlot2Def()
         if d2Val then
-            local c2Val = self:SelectBuffRankForUnit(unit, d2Val, false)
+            local c2Val = self:SelectBuffRankForUnit(unit, d2Val, self:GroupBuffOnFor(unit, d2Val, unitState.classFile))
             if c2Val then
                 c2Val.buffDef = d2Val
                 c2Val.slotIndex = 2
@@ -1856,6 +1858,30 @@ end
 -----------------------------------------------------------------------------
 -- Should Show Target Unit
 -----------------------------------------------------------------------------
+-- true for a player, or for a unit a player controls (pets and other summons)
+function ns:IsPlayerOrSummon(unit)
+    if UnitIsPlayer then
+        local okPl, hasPl = pcall(UnitIsPlayer, unit)
+        if okPl and safeVal(hasPl) then return true end
+    end
+    if UnitPlayerControlled then
+        local okPc, hasPc = pcall(UnitPlayerControlled, unit)
+        if okPc and safeVal(hasPc) then return true end
+    end
+    return false
+end
+
+-- online: summons and other creatures are always "connected" (the check is meant for players)
+local function unitConnected(unit)
+    if UnitIsPlayer then
+        local okPl, hasPl = pcall(UnitIsPlayer, unit)
+        if okPl and safeVal(hasPl) == false then return true end
+    end
+    local okConn, hasConn = pcall(UnitIsConnected, unit)
+    return not (okConn and safeVal(hasConn) == false)
+end
+ns.UnitConnected = unitConnected
+
 function ns:ShouldShowTargetUnit()
     if EzWoW_SpellControlDB and EzWoW_SpellControlDB.showTarget == false then
         return false
@@ -1876,11 +1902,10 @@ function ns:ShouldShowTargetUnit()
             return false
         end
     end
-    if UnitIsPlayer then
-        local okPl, hasPl = pcall(UnitIsPlayer, "target")
-        if not okPl or not safeVal(hasPl) then
-            return false
-        end
+    -- another player, or a summon (a pet, a totem-like guardian) of anyone: a summon is
+    -- never on the board, even one of the party (2026-11-23, user: buffs for summons too)
+    if not ns:IsPlayerOrSummon("target") then
+        return false
     end
     if UnitIsFriend then
         local okFr, hasFr = pcall(UnitIsFriend, "player", "target")
@@ -1960,12 +1985,110 @@ function ns:RebuildActiveUnits()
         end
     end
 
-    if self:ShouldShowTargetUnit() then
-        table.insert(self.activeUnits, "target")
-        if self.unitGroupBreaks then
-            self.unitGroupBreaks[#self.activeUnits] = "target"
+    -- summons (my pet; in a party also the party's pets) on a row of their own: their cells
+    -- are there before a fight, so they can be buffed and cleansed in combat too (2026-11-23)
+    if not EzWoW_SpellControlDB or EzWoW_SpellControlDB.showPets ~= false then
+        local pets = {}
+        if safeVal(UnitExists("pet")) then pets[#pets + 1] = "pet" end
+        if not (IsInRaid and IsInRaid()) and IsInGroup and IsInGroup() then
+            for index = 1, 4 do
+                local unitRef = "partypet" .. index
+                if safeVal(UnitExists(unitRef)) then pets[#pets + 1] = unitRef end
+            end
+        end
+        if #pets > 0 then
+            self.unitGroupBreaks = self.unitGroupBreaks or {}
+            self.unitGroupBreaks[#self.activeUnits + 1] = "pets"
+            for _, unitRef in ipairs(pets) do table.insert(self.activeUnits, unitRef) end
         end
     end
+
+    if self:WantsTargetCell() then
+        table.insert(self.activeUnits, "target")
+        self.unitGroupBreaks = self.unitGroupBreaks or {}
+        self.unitGroupBreaks[#self.activeUnits] = "target"
+    end
+end
+
+-- The target cell: there while a friendly player or summon outside the party is the target,
+-- or always (keepTargetCell, on by default) - a cell can't be added in combat, so a kept one
+-- lets a target picked in combat be buffed (empty and still while the target is no such unit;
+-- its left click then holds the first buff at the highest rank) (2026-11-23).
+function ns:WantsTargetCell()
+    local db = EzWoW_SpellControlDB
+    if db and db.showTarget == false then return false end
+    if not db or db.keepTargetCell ~= false then return true end
+    return self:ShouldShowTargetUnit() and true or false
+end
+
+-----------------------------------------------------------------------------
+-- Group buffs (Gift of the Wild, Prayer of Fortitude/Spirit/Shadow Protection, Arcane
+-- Brilliance, Greater Blessings): used by themselves in a party or raid, per buff, when
+-- 3 or more of the people on the board it is for (both of two) miss it in range and its
+-- reagent is in the bags; else the single buff. A Greater Blessing reaches everyone of
+-- one class, so it is decided per class and blessing (and for a single member too).
+-- Pets and the target cell keep the single buff. (2026-11-23: a druid learned Gift of the
+-- Wild from a book; the old "prefer group buffs" switch was off by default, and when on it
+-- cast the group buff without the reagent or for one person, and only for the first buff.)
+-----------------------------------------------------------------------------
+local GROUP_BUFF_MIN_MISSING = 3
+
+-- the player, a party member or a raid member (not the target, not a pet)
+function ns.IsPersonUnit(unit)
+    if unit == "player" then return true end
+    return type(unit) == "string" and (unit:match("^party%d$") or unit:match("^raid%d+$")) and true or false
+end
+
+local function groupBuffKey(def, classFile)
+    if def.isMainBlessing then return tostring(classFile or "?") .. ":" .. def.key end
+    return def.key
+end
+
+-- true when this unit's cell casts the group form of the buff now
+function ns:GroupBuffOnFor(unit, def, classFile)
+    if not (def and self.groupBuffOn and ns.IsPersonUnit(unit)) then return false end
+    return self.groupBuffOn[groupBuffKey(def, classFile)] and true or false
+end
+
+-- the group buffs to use now, from the last scan: { [key] = true }
+function ns:ComputeGroupBuffs()
+    local on = {}
+    local db = EzWoW_SpellControlDB
+    if (db and db.groupBuffAuto == false) or not (IsInGroup and IsInGroup()) then return on end
+    local stats = {}
+    for _, unitRef in ipairs(self.activeUnits) do
+        local st = self.unitStates[unitRef]
+        if ns.IsPersonUnit(unitRef) and st and st.exists and st.isConnected and not st.isDead then
+            local blessingSeen = false
+            for _, choice in ipairs(st.validChoices or {}) do
+                local def = choice.buffDef
+                -- (a paladin's blessing for this person is the first one; the others are not cast on it)
+                local counts = def and def.highestGroup and not (def.isMainBlessing and blessingSeen)
+                if def and def.isMainBlessing then blessingSeen = true end
+                if counts then
+                    local key = groupBuffKey(def, st.classFile)
+                    local row = stats[key] or { people = 0, missing = 0, def = def }
+                    stats[key] = row
+                    row.people = row.people + 1
+                    if choice.isMissing and st.buffInRange ~= false then row.missing = row.missing + 1 end
+                end
+            end
+        end
+    end
+    for key, row in pairs(stats) do
+        local haveReagent = true
+        local reagentID = self.GetGroupSpellReagent and self:GetGroupSpellReagent(row.def.highestGroup.id)
+        if reagentID then
+            local _, count = self:GetReagentInfo(reagentID)
+            haveReagent = (tonumber(count) or 0) >= 1
+        end
+        local enoughPeople = row.def.isMainBlessing and row.people >= 1 or row.people >= 2
+        if haveReagent and enoughPeople and row.missing >= 1
+            and row.missing >= math.min(GROUP_BUFF_MIN_MISSING, row.people) then
+            on[key] = true
+        end
+    end
+    return on
 end
 
 function ns:ScanAllActiveUnits()
@@ -1983,6 +2106,19 @@ function ns:ScanAllActiveUnits()
         local okSt, stateEntry = pcall(self.ScanUnitState, self, unitRef)
         if okSt and stateEntry and stateEntry.topDebuff and stateEntry.dispelInRange then
             containsDebuffNow = true
+        end
+    end
+    -- group buffs or single: decided from this scan; when that changes, the cells are read again
+    local okGroup, groupOn = pcall(self.ComputeGroupBuffs, self)
+    groupOn = (okGroup and type(groupOn) == "table") and groupOn or {}
+    local keys = {}
+    for key in pairs(groupOn) do keys[#keys + 1] = key end
+    table.sort(keys)
+    local signature = table.concat(keys, ",")
+    if signature ~= (self.groupBuffSig or "") then
+        self.groupBuffOn, self.groupBuffSig = groupOn, signature
+        for _, unitRef in ipairs(self.activeUnits) do
+            pcall(self.ScanUnitState, self, unitRef)
         end
     end
 
@@ -2049,9 +2185,10 @@ function ns:GetReagentInfo(itemID)
     return itemName or ("item:" .. tostring(itemID)), count, itemIcon
 end
 
--- reagent of the group buff picked for slot 1 (only while group buffs are preferred)
+-- reagent of the group buff of slot 1 (in a party or raid, while the automatic group buff is on)
 function ns:GetSelectedGroupBuffReagent()
-    if not (EzWoW_SpellControlDB and EzWoW_SpellControlDB.preferGroupBuff) then return nil end
+    if EzWoW_SpellControlDB and EzWoW_SpellControlDB.groupBuffAuto == false then return nil end
+    if not (IsInGroup and IsInGroup()) then return nil end
     local def = self:GetSelectedBuffSlot1Def()
     local rankObj = def and def.highestGroup
     return rankObj and self:GetGroupSpellReagent(rankObj.id) or nil

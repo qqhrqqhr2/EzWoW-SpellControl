@@ -452,7 +452,7 @@ function SecureCellController.determineUnitBuffSpells(self, unit, state)
     if not buff1Spell then
         local d1Val = self:GetSelectedBuffSlot1Def()
         if d1Val and d1Val.isLearned then
-            local c1Val = self:SelectBuffRankForUnit(unit, d1Val, (unit ~= "target") and EzWoW_SpellControlDB and EzWoW_SpellControlDB.preferGroupBuff)
+            local c1Val = self:SelectBuffRankForUnit(unit, d1Val, self:GroupBuffOnFor(unit, d1Val, state and state.classFile))
             if c1Val then buff1Spell = c1Val.castSpell end
         end
     end
@@ -460,7 +460,7 @@ function SecureCellController.determineUnitBuffSpells(self, unit, state)
     if not buff2Spell then
         local d2Val = self:GetSelectedBuffSlot2Def()
         if d2Val and d2Val.isLearned then
-            local c2Val = self:SelectBuffRankForUnit(unit, d2Val, false)
+            local c2Val = self:SelectBuffRankForUnit(unit, d2Val, self:GroupBuffOnFor(unit, d2Val, state and state.classFile))
             if c2Val then buff2Spell = c2Val.castSpell end
         end
     end
@@ -831,11 +831,27 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
         ns:ClearSequenceSpellCache()
         ns:ScanLearnedSpells()
         if not (InCombatLockdown and InCombatLockdown()) and ns.LayoutBoardCells then
+            -- my pet came or went: its cell too
+            if event == "UNIT_PET" then ns:RebuildActiveUnits() end
             ns:LayoutBoardCells()
+        elseif event == "UNIT_PET" then
+            ns.pendingSecureUpdate = true
         end
         ns:ScanAllActiveUnits()
         if ns.RefreshSettingsTexts then
             ns:RefreshSettingsTexts()
+        end
+    elseif event == "UNIT_PET" then
+        -- a party member's pet came or went: the pet cells change (after combat if in one)
+        local owner = safeVal(arg1)
+        if type(owner) == "string" and owner:match("^party%d$") then
+            if InCombatLockdown and InCombatLockdown() then
+                ns.pendingSecureUpdate = true
+            elseif EzWoW_SpellControlDB and EzWoW_SpellControlDB.showPets ~= false then
+                ns:RebuildActiveUnits()
+                if ns.LayoutBoardCells then ns:LayoutBoardCells() end
+                ns:ScanAllActiveUnits()
+            end
         end
     elseif event == "GROUP_ROSTER_UPDATE" then
         -- "party2" / "raid5" may be someone else now
@@ -868,7 +884,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
                     break
                 end
             end
-            local wantTargetCell = ns:ShouldShowTargetUnit() and true or false
+            local wantTargetCell = ns:WantsTargetCell() and true or false
             if wantTargetCell ~= hasTargetCell then
                 ns:RebuildActiveUnits()
                 if ns.LayoutBoardCells then
