@@ -15,7 +15,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 ### 개요
 
-파티 · 공격대에서 **빠진 버프 걸기 · 디버프 해제 · 적 대상 메즈(군중 제어)**를 마우스 클릭 한 번으로 하게 해 주는 작은 전술 보드입니다. 내 캐릭터가 마법책에서 **실제로 배운 액티브 주문만** 읽어서 `버프` / `해제` / `메즈` 세 칸에 필요한 대상만 보여 줍니다.
+파티 · 공격대에서 **빠진 버프 걸기 · 디버프 해제**를 마우스 클릭 한 번으로 하게 해 주는 작은 전술 보드입니다. 내 캐릭터가 마법책에서 **실제로 배운 액티브 주문만** 읽어서 `버프` / `해제` 두 칸에 필요한 대상만 보여 줍니다.
 
 직업 기술 전문가를 한 번 열면 **레벨별로 배울 주문과 비용**을 저장해 두고, 별도 창(`/ezsc spells`) · 주문책 옆 패널 · 주문 툴팁 · 레벨업 알림으로 알려 줍니다.
 
@@ -42,12 +42,11 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 | ① | 제목 줄 | 마우스를 **1초 동안** 올려 두면 테두리와 **접기/펼치기 · 잠금/해제 · 설정(톱니바퀴)** 버튼이 나타나고, 마우스가 창 안에 있는 동안 유지됩니다. **Ctrl + 제목 좌클릭 드래그**로 언제든 이동하고, 오른쪽 아래 모서리로 크기를 바꿉니다. 잠금을 풀면 섹션 제목을 위 · 아래로 끌어 **섹션 순서**를 바꿀 수 있습니다. |
 | ② | 버프 | 버프가 빠진 파티 · 공격대원, 나(솔로 표시 옵션), 내 소환수 · 파티원 소환수(공격대에서는 내 소환수만, 따로 한 줄), 대상으로 잡은 파티 밖 우호적 플레이어 · 소환수만 보입니다. 대상 칸은 자리를 늘 두어 전투 중에 새로 잡은 대상에게도 1순위 버프를 걸 수 있습니다(버프 받을 대상이 아니면 빈칸). 칸 위쪽은 이름, 아래쪽은 배지입니다. 공격대에서는 **담당 공대 파티**로 고른 파티만 나오고 파티마다 새 줄에서 시작합니다. |
 | ② | 해제 | 내가 지울 수 있는 디버프(마법 · 저주 · 질병 · 독)에 걸린 파티원만 바로 나타나고 알림음이 울립니다. 테두리 색이 디버프 종류입니다. 독 해제 · 질병 해제 같은 **지속형 해제가 이미 걸려 있으면 `해제중`**으로 표시해 마나 낭비를 막습니다. |
-| ② | 메즈 | 적을 대상으로 잡으면 **생명체 유형**(야수 · 인간형 · 언데드 · 악마 · 정령 · 용족 · 거인 · 기계)과 사거리를 확인해, 걸 수 있는 군중 제어 주문(변이, 언데드 속박, 겨울잠, 추방, 현혹, 실명, 비열한 습격/급소 가격, 얼음의 덫, 공포 등)을 칸에 배치합니다. |
 | ③ | 주문 툴팁 랭크 안내 | 배운 주문의 툴팁에 **다음 랭크: 랭크 N · Lv**, 아직 배우지 않은 랭크의 툴팁에 **배울 수 있는 레벨: N**이 붙습니다. |
 | ④ | 레벨별 배울 스킬 (`/ezsc spells`) | 직업 기술 전문가 창을 열 때 저장한 목록을 모든 레벨에 걸쳐 보여 주고, **현재 레벨** 줄에서 열립니다. **지금 배울 수 있는 주문**은 강조색, 처음 배우는 주문은 노란 **(새 스킬)**, 나머지는 **(랭크 N)**, 이미 배운 주문은 흐리게 체크 표시, 오른쪽은 비용입니다. 위쪽에 지금 배울 수 있는 주문 수와 합계 비용, 제목 아래에 마지막 전문가 방문 시각이 나옵니다. |
 | ⑤ | 주문책 옆 패널 | 주문책을 열면 같은 목록이 주문책 오른쪽에 붙습니다(줄마다 `Lv`). `<` 단추로 접고 `>`로 다시 펼칩니다. |
 | ⑥ | 레벨업 알림 | 레벨이 오르면 새로 배울 수 있는 주문 수를 채팅창에 알려 줍니다(전투 중이면 전투가 끝난 뒤). |
-| ⑦ | 추천 특성 (`/추천특성`) | 특성 창 검색창 왼쪽의 **추천 특성** 단추를 누르면 내 직업의 빌드 목록(`전문화 (역할)  분배`)이 나옵니다. 하나를 고르면 남은 포인트를 넣고, **적용할지 한 번 더 묻습니다**. |
+| ⑦ | 추천 특성 (`/추천특성`) | 특성 창 검색창 왼쪽의 **추천 특성** 단추를 누르면 전문화별로 레벨업 순서와 만렙 빌드가 나옵니다. 하나를 고르면 남은 포인트를 넣고, **적용할지 한 번 더 묻습니다**. |
 
 #### 클릭 조작
 
@@ -55,9 +54,8 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 |---|---|---|---|
 | 버프 | 1순위 버프 (`좌:버프`) | 보조 버프 (`우:버프`, 가시 · 천상의 정신 · 내면의 열정 · 마법사 갑옷 등) | **Ctrl + 휠**: 좌클릭 버프 바꾸기 · **Alt + 좌클릭**: 대상 선택 |
 | 해제 | 주력 해제 (`좌:마법`, `좌:저주` …) | 보조 해제 (`우:독`, `우:질병` …) | Alt + 좌클릭: 대상 선택 |
-| 메즈 | 1순위 메즈 (`좌:메즈`) | 2순위 메즈 (`우:메즈`) | **Ctrl + 좌클릭**: 3순위 메즈 (`C좌:메즈`) |
 
-배지 뜻: `거리밖` 사거리 밖 · `완료` 버프 유지 중 · `오프` 오프라인 · `사망` 죽음/유령 · `불가` 걸 수 있는 메즈 없음 · `대기` 대상 대기
+배지 뜻: `거리밖` 사거리 밖 · `완료` 버프 유지 중 · `오프` 오프라인 · `사망` 죽음/유령
 
 칸 아이콘에는 좌클릭 주문의 재사용 대기(공용 재사용 대기 포함)가 행동 단축바처럼 돌아갑니다. 전투 중에도 표시됩니다.
 
@@ -74,9 +72,11 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 #### 추천 특성
 
 - 특성 창을 열면 검색창 왼쪽에 **추천 특성** 단추가 생깁니다. `/추천특성`(`/eztalent`)으로 어디서나 같은 메뉴를 열 수 있습니다.
-- 메뉴에는 내 직업의 1~60레벨 빌드가 나옵니다(예: `암흑 (딜러)  16/3/32`). 전문화마다 하나씩, 직업마다 3개이고 드루이드는 4개(야성 딜러 · 탱커 따로)입니다.
-- 빌드를 고르면 남은 포인트를 빌드 순서대로 넣은 뒤 **적용 / 취소**를 묻습니다. 취소하면 넣은 포인트를 되돌립니다.
-- 레벨업 중에는 레벨이 오를 때마다 다시 누르면 이어서 찍습니다. 빌드에 없는 특성에 이미 포인트가 있으면 채팅창에 알려 줍니다.
+- 메뉴는 전문화(역할)별로 나뉩니다. 전문화마다 **레벨업 (Lv 10~60)** 순서 하나와 **만렙 빌드**가 있고, 만렙 빌드는 용도에 따라 여러 개입니다(던전·공격대, 던전용·공격대용, PvP, 다른 특성 섞음 등). 줄 끝의 숫자는 세 특성 계열에 들어가는 포인트입니다(예: `38/0/13`).
+- 줄 앞의 **초록 점**은 지금 찍힌 특성 그대로 이어 갈 수 있는 빌드입니다. 회색 점은 빌드에 없는 특성에 포인트가 있다는 뜻입니다(마우스를 올리면 몇 포인트인지 나옵니다).
+- 빌드를 고르면 남은 포인트를 빌드 순서대로 넣은 뒤 **적용 / 취소**를 묻습니다. 취소하면 넣은 포인트를 되돌립니다. 순서와 다르게 먼저 찍어 둔 특성이 있어도 빌드에 있는 특성이면 그대로 두고 나머지를 채웁니다. 아직 열리지 않은 특성은 건너뛰었다가 열리면 넣습니다.
+- 레벨업 중에는 레벨이 오를 때마다 다시 누르면 이어서 찍습니다. 마지막으로 고른 빌드는 메뉴 맨 위 **이어서** 줄에 나옵니다.
+- 레벨업 순서와 만렙 빌드는 다를 수 있습니다. 만렙 빌드대로 바꾸려면 특성을 초기화한 뒤 고르세요.
 - 전투 중에는 특성을 바꿀 수 없습니다.
 
 ### 설정창 (`/ezsc`)
@@ -88,12 +88,12 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 | ① | 보조 버프(가시 · 정신력 · 내면의 열정 · 갑옷 등) 빠짐도 표시 | 켬 |
 | ① | 파티 전체 버프 자동 사용 (3명 이상 빠지고 재료가 있을 때) | 켬 |
 | ① | 해제할 디버프가 걸리면 알림음 재생 | 켬 |
-| ① | 혼자 있을 때(솔플)도 내 캐릭터 표시 · 파티원이 아닌 우호적 대상 표시 · 우호적 대상 칸 늘 두기 · 소환수 칸 표시 · 적 대상 메즈 칸 표시 | 켬 |
+| ① | 혼자 있을 때(솔플)도 내 캐릭터 표시 · 파티원이 아닌 우호적 대상 표시 · 우호적 대상 칸 늘 두기 · 소환수 칸 표시 | 켬 |
 | ① | 위로 펼치기 (창을 화면 아래쪽에 둘 때) | 끔 |
 | ① | 새 주문 랭크를 배우면 단축바의 낮은 랭크를 자동 교체 | 켬 |
 | ① | 담당 공대 파티 1~8 (끈 파티는 공격대에서 칸이 생기지 않음) | 모두 켬 |
 | ② | 좌클릭 버프 / 우클릭 버프: 자동 추천 · 특정 버프 · 사용 안 함 | 자동 추천 |
-| ② | 보유 버프 · 보유 해제 · 보유 메즈 (좌/우) 목록 · 언어(목록에서 자동 + 8개 언어) | 자동 |
+| ② | 보유 버프 · 보유 해제 목록 · 언어(목록에서 자동 + 8개 언어) | 자동 |
 | ③ | 파티 크기 · 공대 크기 · 한 줄 개수 · 불투명도 | 30 · 24 · 5 · 100% |
 | ③ | 마우스 올릴 때만 표시 · 만료 임박(0~10분, 0 = 끔) | 끔 · 3분 |
 | ④ | 창 잠금 · 창 숨기기 · 전체 펼치기 · 전체 접기 · 새로고침 · 위치 초기화 | - |
@@ -139,7 +139,7 @@ WoW Forever (`Interface: 16001`) · `/ezsc`
 
 ### Overview
 
-A small tactical board that lets you **buff missing members, cleanse debuffs and crowd-control enemies** with a single click. It reads only **active spells you have actually learned** and shows just the units that need something in three sections: `Buffs` / `Cleanse` / `Crowd Control`.
+A small tactical board that lets you **buff missing members and cleanse debuffs** with a single click. It reads only **active spells you have actually learned** and shows just the units that need something in two sections: `Buffs` / `Cleanse`.
 
 Open your class trainer once and it saves **the spells you can learn at each level and their cost**, shown in a window (`/ezsc spells`), a panel next to the spellbook, spell tooltips and a level-up notice.
 
@@ -166,12 +166,11 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 | ① | Title bar | Keep the mouse on it for **1 second** to bring up the frame and **fold/unfold · lock/unlock · settings (gear)**; they stay while the mouse is on the window. **Ctrl + left-drag the title** moves it any time; resize from the bottom-right corner. While unlocked, drag section headers up/down to **reorder sections**. |
 | ② | Buffs | Only party/raid members missing a buff, yourself (solo option), your pet and the party's pets (only yours in a raid, on a row of their own) and a targeted friendly player or summon outside the party. The target cell keeps its place, so a target picked in combat can get your first buff too (empty while the target is no such unit). Name on top of the cell, badge at the bottom. In a raid only the **raid groups** you picked get cells, each group on a new row. |
 | ② | Cleanse | Members with a debuff you can remove (magic, curse, disease, poison) appear at once with a sound. Border colour = debuff type. If a periodic cleanse (Abolish Poison/Disease) is already running, the cell shows **`Active`** to save mana. |
-| ② | Crowd control | When you target an enemy it checks **creature type** (beast, humanoid, undead, demon, elemental, dragonkin, giant, mechanical) and range, and places usable CC (Polymorph, Shackle Undead, Hibernate, Banish, Seduction, Blind, Sap/Gouge, Freezing Trap, Fear, …). |
 | ③ | Rank hints in spell tooltips | Learned spells show **Next rank: Rank N · Lv**, ranks you have not learned show **Learnable at level: N**. |
 | ④ | Spells by level (`/ezsc spells`) | The list saved from your class trainer, every level grouped, opening at **your level**. **Spells you can learn now** are highlighted, first ranks show a yellow **(new spell)**, others **(Rank N)**, learned ones are faded with a check, the cost is on the right. The top line shows how many you can learn now and the total cost; the title shows your last trainer visit. |
 | ⑤ | Spellbook panel | Opening the spellbook docks the same list on its right (with `Lv` on each row). Fold it with `<`, unfold with `>`. |
 | ⑥ | Level-up notice | On level-up, chat tells you how many new spells you can learn (after combat if you are fighting). |
-| ⑦ | Recommended talents (`/eztalent`) | The **Recommended** button left of the talent search box lists your class's builds (`Spec (Role)  split`). Pick one to spend your free points; **you are asked once more before they are applied**. |
+| ⑦ | Recommended talents (`/eztalent`) | The **Recommended** button left of the talent search box lists, per spec, a leveling order and level-60 builds. Pick one to spend your free points; **you are asked once more before they are applied**. |
 
 #### Click controls
 
@@ -179,9 +178,8 @@ The talent window gets a **Recommended** button: pick a recommended build for yo
 |---|---|---|---|
 | Buff | Main buff (`L:Buff`) | Secondary buff (`R:Buff`: Thorns, Divine Spirit, Inner Fire, Mage Armor, …) | **Ctrl + wheel**: change the left-click buff · **Alt + left-click**: target |
 | Cleanse | Main cleanse (`L:Mag`, `L:Cur` …) | Secondary cleanse (`R:Poi`, `R:Dis` …) | Alt + left-click: target |
-| CC | 1st CC (`L:CC`) | 2nd CC (`R:CC`) | **Ctrl + left-click**: 3rd CC |
 
-Badges: `Range` out of range · `OK` buff active · `OFF` offline · `DEAD` dead/ghost · `N/A` no usable CC · `Ready` waiting for target
+Badges: `Range` out of range · `OK` buff active · `OFF` offline · `DEAD` dead/ghost
 
 Cell icons show the cooldown of their left-click spell (global cooldown too), like action buttons, in combat as well.
 
@@ -198,9 +196,11 @@ Cell icons show the cooldown of their left-click spell (global cooldown too), li
 #### Recommended talents
 
 - Opening the talent window adds a **Recommended** button left of its search box. `/eztalent` (`/추천특성`) opens the same menu anywhere.
-- The menu lists level 1–60 builds for your class (e.g. `Shadow (DPS)  16/3/32`): one per spec, three per class, four for druids (Feral DPS and Feral tank are separate).
-- Pick a build: your free points are spent in the build's order, then you choose **Apply / Cancel**. Cancel takes the placed points back.
-- While leveling, click again after each level to continue. If points already sit in talents outside the build, chat tells you.
+- The menu is grouped by spec (with its role). Each spec has a **Leveling (Lv 10-60)** order and **level-60 builds**, several where it matters (dungeon & raid, dungeon or raid only, PvP, hybrids). The numbers at the end are the points per talent tree (e.g. `38/0/13`).
+- A **green dot** marks builds you can continue from your current talents; a gray dot means points sit in talents the build does not use (hover to see how many).
+- Pick a build: your free points are spent in the build's order, then you choose **Apply / Cancel**. Cancel takes the placed points back. Talents you took out of order stay when they are part of the build; the rest is filled in, and a talent that is not open yet is taken once it opens.
+- While leveling, click again after each level to continue. Your last build is listed at the top as **Continue**.
+- The leveling order and the level-60 builds can differ: reset your talents before switching to a level-60 build.
 - Talents cannot be changed in combat.
 
 ### Settings window (`/ezsc`)
@@ -212,12 +212,12 @@ Cell icons show the cooldown of their left-click spell (global cooldown too), li
 | ① | Also check secondary buffs (Thorns, Spirit, Inner Fire, Armor) | On |
 | ① | Group buffs when 3+ miss them and you have the reagent | On |
 | ① | Play sound alert on dispellable debuff | On |
-| ① | Show my character when solo · Show friendly target outside party · Always keep the friendly target cell · Show pet cells · Show CC slot when targeting an enemy | On |
+| ① | Show my character when solo · Show friendly target outside party · Always keep the friendly target cell · Show pet cells | On |
 | ① | Expand upward (when placed at bottom of screen) | Off |
 | ① | Replace lower ranks on action bars when a new rank is learned | On |
 | ① | Raid groups 1–8 (groups turned off get no cells in a raid) | All on |
 | ② | Left-Click / Right-Click buff: Auto · a specific buff · none | Auto |
-| ② | Learned buffs · cleanses · CC (L/R) · Language (Auto or one of 8 languages, picked from the list) | Auto |
+| ② | Learned buffs · cleanses · Language (Auto or one of 8 languages, picked from the list) | Auto |
 | ③ | Party size · Raid size · Per row · Opacity | 30 · 24 · 5 · 100% |
 | ③ | Show only on mouseover · Expiring soon (0–10 min, 0 = off) | Off · 3 min |
 | ④ | Lock window · Hide window · Expand all · Collapse all · Refresh · Reset position | - |

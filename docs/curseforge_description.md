@@ -1,13 +1,13 @@
 <!--
-CurseForge summary (EN): One-click party buffs, debuff cleanse and enemy crowd control, plus spells to learn at each level with costs, rank hints in tooltips and recommended talent builds.
-CurseForge summary (KO): 파티 버프 · 디버프 해제 · 적 대상 메즈를 클릭 한 번으로. 레벨별로 배울 주문과 비용, 툴팁 랭크 안내, 직업별 추천 특성까지.
+CurseForge summary (EN): One-click party buffs and debuff cleanse, plus spells to learn at each level with costs, rank hints in tooltips and recommended talent builds.
+CurseForge summary (KO): 파티 버프 · 디버프 해제를 클릭 한 번으로. 레벨별로 배울 주문과 비용, 툴팁 랭크 안내, 직업별 추천 특성까지.
 -->
 
 # EzWoW - Spell Control
 
 **English** · [한국어](#한국어)
 
-A small tactical board for WoW Forever: **buff missing members, cleanse debuffs and crowd-control enemies with one click**. It reads only the active spells you have learned and shows just the units that need something. It also keeps track of **the spells you can learn at each level** after you visit your class trainer, and adds **recommended talent builds** to the talent window.
+A small tactical board for WoW Forever: **buff missing members and cleanse debuffs with one click**. It reads only the active spells you have learned and shows just the units that need something. It also keeps track of **the spells you can learn at each level** after you visit your class trainer, and adds **recommended talent builds** to the talent window.
 
 ![Tactical board, spellbook and spells by level](https://raw.githubusercontent.com/ezwow-addons/EzWoW-SpellControl/master/docs/images/ui_en.png)
 
@@ -20,7 +20,6 @@ A small tactical board for WoW Forever: **buff missing members, cleanse debuffs 
 ### Tactical board
 - **Buffs**: party and raid members missing a buff, yourself when solo, and a friendly target outside your group. Left-click the main buff, right-click the secondary buff, Ctrl + mouse wheel to switch the left-click buff.
 - **Cleanse**: members with a debuff you can remove appear at once with a sound; the border colour shows the debuff type, and a running Abolish effect shows `Active`.
-- **Crowd control**: target an enemy and the board offers the CC that works on its creature type and range (left / right / Ctrl + left-click).
 - Smart choices: class-aware buffs, auto-downranking for low-level members, optional group buffs first, buffs about to expire count as missing.
 - Buff cells switch to `OK` as soon as the buff is back on, even in combat.
 - Raid groups you look after, separate party and raid cell sizes, lock, fold, reorder sections, show only on mouseover.
@@ -35,9 +34,9 @@ A small tactical board for WoW Forever: **buff missing members, cleanse debuffs 
 - Optional: after learning a new rank, lower ranks on your action bars are replaced.
 
 ### Recommended talents
-- A **Recommended** button on the talent window lists level 1–60 builds for your class, one per spec (e.g. `Shadow (DPS)  16/3/32`).
-- Pick one and your free points are spent in the build's order; you are asked once more before they are applied, and Cancel takes them back.
-- While leveling, click again after each level to continue.
+- A **Recommended** button on the talent window lists, per spec, a leveling order (Lv 10-60) and level-60 builds for dungeon & raid, dungeon or raid only, PvP and hybrids (e.g. `Balance  Leveling  38/0/13`).
+- Pick one and your free points are spent in the build's order; you are asked once more before they are applied, and Cancel takes them back. Talents taken out of order are kept when the build uses them.
+- A green dot marks builds you can continue from your current talents. While leveling, click again after each level to continue.
 
 ## Gamepad
 - With the gamepad UI on, EzWoW windows work with a gamepad: D-pad to move, A (✕) to press, X (□) for right-click, LB/RB to scroll, B (○) to close. A key guide in your pad's button style shows under the window.
@@ -64,7 +63,7 @@ Languages: English, 한국어, Deutsch, Français, Español, Русский, 简
 
 ## 한국어
 
-WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버프 해제 · 적 대상 메즈를 클릭 한 번으로** 합니다. 마법책에서 실제로 배운 액티브 주문만 읽어 필요한 대상만 보여 줍니다. 직업 기술 전문가를 한 번 방문하면 **레벨별로 배울 주문**도 알려 주고, 특성 창에는 **직업별 추천 특성**을 넣어 줍니다.
+WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버프 해제를 클릭 한 번으로** 합니다. 마법책에서 실제로 배운 액티브 주문만 읽어 필요한 대상만 보여 줍니다. 직업 기술 전문가를 한 번 방문하면 **레벨별로 배울 주문**도 알려 주고, 특성 창에는 **직업별 추천 특성**을 넣어 줍니다.
 
 ![전술 보드, 마법책과 레벨별 배울 스킬](https://raw.githubusercontent.com/ezwow-addons/EzWoW-SpellControl/master/docs/images/ui_ko.png)
 
@@ -77,7 +76,6 @@ WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버�
 ### 전술 보드
 - **버프**: 버프가 빠진 파티 · 공격대원, 솔로일 때 나, 파티 밖 우호적 대상. 좌클릭은 주 버프, 우클릭은 보조 버프, Ctrl + 마우스 휠로 좌클릭 버프 변경.
 - **해제**: 내가 지울 수 있는 디버프에 걸린 파티원이 알림음과 함께 바로 나타납니다. 테두리 색이 디버프 종류이고, 지속형 해제가 걸려 있으면 `해제중`.
-- **메즈**: 적을 대상으로 잡으면 생명체 유형과 사거리에 맞는 군중 제어 주문을 배치합니다(좌 / 우 / Ctrl + 좌클릭).
 - 똑똑한 선택: 직업별 맞춤 버프, 저레벨 대상 자동 하향, 단체 버프 우선(선택), 곧 끝나는 버프도 빠진 것으로 표시.
 - 버프 칸은 전투 중에도 버프가 다시 걸리면 바로 `완료`로 바뀝니다.
 - 담당 공대 파티 선택, 파티 · 공대 칸 크기 따로, 잠금 · 접기 · 섹션 순서 변경, 마우스 올릴 때만 표시.
@@ -92,9 +90,9 @@ WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버�
 - 선택: 새 랭크를 배우면 단축바의 낮은 랭크를 자동으로 바꿉니다.
 
 ### 추천 특성
-- 특성 창의 **추천 특성** 단추를 누르면 내 직업의 1~60레벨 빌드가 전문화마다 하나씩 나옵니다(예: `암흑 (딜러)  16/3/32`).
-- 하나를 고르면 남은 포인트를 빌드 순서대로 넣고, 적용할지 한 번 더 묻습니다. 취소하면 되돌립니다.
-- 레벨이 오를 때마다 다시 누르면 이어서 찍습니다.
+- 특성 창의 **추천 특성** 단추를 누르면 전문화마다 레벨업 순서(Lv 10~60)와 만렙 빌드(던전·공격대, 던전용·공격대용, PvP, 다른 특성 섞음)가 나옵니다(예: `조화  레벨업  38/0/13`).
+- 하나를 고르면 남은 포인트를 빌드 순서대로 넣고, 적용할지 한 번 더 묻습니다. 취소하면 되돌립니다. 순서와 다르게 먼저 찍은 특성도 빌드에 있으면 그대로 둡니다.
+- 초록 점은 지금 특성 그대로 이어 갈 수 있는 빌드입니다. 레벨이 오를 때마다 다시 누르면 이어서 찍습니다.
 
 ## 게임패드
 - 게임패드 UI를 켜면 EzWoW 창을 패드로 다룰 수 있습니다. 방향키로 이동, A(✕)로 누르기, X(□)로 오른쪽 클릭, LB/RB로 스크롤, B(○)로 닫기입니다. 창 아래에 연결된 패드 모양으로 키 안내가 나옵니다.

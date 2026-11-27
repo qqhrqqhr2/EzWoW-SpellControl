@@ -137,27 +137,6 @@ end
 -- Assemble Cell Tooltip Signature
 -----------------------------------------------------------------------------
 function TacticalUnitBoard.assembleCellTooltipSignature(cell, unit, state)
-    if cell.sectionRole == "CC" then
-        local ccSt = ns.ccTargetState or ns:ScanCCTargetState()
-        local parts = {
-            "ROLE:CC",
-            tostring(ccSt.hasEnemyTarget),
-            tostring(ccSt.name or ""),
-            tostring(ccSt.level or 0),
-            tostring(ccSt.isDead),
-            tostring(ccSt.creatureTypeKey or ""),
-            tostring(cell.boundLClickCC or ""),
-            tostring(cell.boundRClickCC or ""),
-            tostring(cell.boundCtrlLClickCC or ""),
-        }
-        if ccSt.ccEntries then
-            for _, recordEntry in ipairs(ccSt.ccEntries) do
-                parts[#parts + 1] = string.format("%d:%s:%s:%s", recordEntry.slotIndex or 0, tostring(recordEntry.ccDef and recordEntry.ccDef.key or ""), tostring(recordEntry.eligible), tostring(recordEntry.inRange))
-            end
-        end
-        return table.concat(parts, "|")
-    end
-
     local parts = {
         tostring(cell.sectionRole or "BUFF"),
         tostring(unit),
@@ -193,20 +172,6 @@ function TacticalUnitBoard.assembleCellTooltipSignature(cell, unit, state)
     return table.concat(parts, "|")
 end
 
-function TacticalUnitBoard.resolveBoundCCButtonOrder(cell, ccDef, fallbackOrder)
-    local fullCastName = ccDef and ccDef.fullCastName
-    if cell and fullCastName then
-        if cell.boundLClickCC == fullCastName then
-            return 1
-        elseif cell.boundRClickCC == fullCastName then
-            return 2
-        elseif cell.boundCtrlLClickCC == fullCastName then
-            return 3
-        end
-    end
-    return fallbackOrder or 1
-end
-
 function TacticalUnitBoard.resolveBoundDispelButtonOrder(cell, debuffInfo)
     local fullCastName = debuffInfo and debuffInfo.cureSpell and debuffInfo.cureSpell.fullCastName
     if cell and fullCastName then
@@ -219,122 +184,8 @@ function TacticalUnitBoard.resolveBoundDispelButtonOrder(cell, debuffInfo)
     return 1
 end
 
-function TacticalUnitBoard.resolveCCSlotBadgeText(findSequenceMatchIndex)
-    if findSequenceMatchIndex == 1 then
-        return ns:L("BADGE_CC_L")
-    elseif findSequenceMatchIndex == 2 then
-        return ns:L("BADGE_CC_R")
-    else
-        return ns:L("BADGE_CC_CTRL_L")
-    end
-end
-
-function TacticalUnitBoard.resolveCCSlotActionTipKey(findSequenceMatchIndex)
-    if findSequenceMatchIndex == 1 then
-        return "TIP_ACTION_LCLICK_CC"
-    elseif findSequenceMatchIndex == 2 then
-        return "TIP_ACTION_RCLICK_CC"
-    else
-        return "TIP_ACTION_CTRL_LCLICK_CC"
-    end
-end
-
 function TacticalUnitBoard.presentCellTooltip(cell, forceRebuild)
     if not cell then return end
-
-    if cell.sectionRole == "CC" then
-        local ccSt = ns.ccTargetState or ns:ScanCCTargetState()
-        if not ccSt.hasEnemyTarget or ccSt.isDead then
-            if GameTooltip and GameTooltip:IsOwned(cell) then
-                GameTooltip:Hide()
-            end
-            return
-        end
-
-        local sig = TacticalUnitBoard.assembleCellTooltipSignature(cell, "target", ccSt)
-        if not forceRebuild and cell._lastTipSig == sig and GameTooltip:IsOwned(cell) and GameTooltip:IsShown() then
-            return
-        end
-        cell._lastTipSig = sig
-
-        GameTooltip:SetOwner(cell, "ANCHOR_RIGHT")
-        GameTooltip:ClearLines()
-
-        local cTypeLabel = ccSt.creatureTypeLocale or ns:L("CTYPE_UNKNOWN")
-        if ccSt.rawNameSecret then
-            pcall(GameTooltip.AddDoubleLine, GameTooltip,
-                ccSt.rawName,
-                string.format("|cffE77C70%s|r", ns:L("TIP_ENEMY_TARGET_TAG")),
-                0.96, 0.56, 0.36, 0.96, 0.56, 0.36
-            )
-        else
-            local dispTypeInHeader = ccSt.rawCreatureTypeSecret and "" or cTypeLabel
-            GameTooltip:AddLine(
-                string.format("%s (%s) |cffE77C70%s|r", ccSt.name or "target", string.format(ns:L("TIP_UNIT_LEVEL"), ccSt.level or 0, dispTypeInHeader), ns:L("TIP_ENEMY_TARGET_TAG")),
-                0.96, 0.56, 0.36
-            )
-        end
-        if ccSt.rawCreatureTypeSecret then
-            local typePrefix = (ns:L("TIP_CREATURE_TYPE"):match("^(.-)%%s") or "대상 종족/유형: ")
-            pcall(GameTooltip.AddDoubleLine, GameTooltip,
-                typePrefix,
-                ccSt.rawCreatureType,
-                STYLE.textSub[1], STYLE.textSub[2], STYLE.textSub[3],
-                1.00, 0.82, 0.48
-            )
-        else
-            GameTooltip:AddLine(string.format(ns:L("TIP_CREATURE_TYPE"), cTypeLabel), unpack(STYLE.textSub))
-        end
-
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(ns:L("TIP_CC_USABLE_HEADER"), unpack(STYLE.gold))
-
-        local anyEligible = false
-        if ccSt.ccEntries then
-            for _, entry in ipairs(ccSt.ccEntries) do
-                local btnOrder = TacticalUnitBoard.resolveBoundCCButtonOrder(cell, entry.ccDef, entry.usableOrder or entry.slotIndex)
-                local slotBadge = TacticalUnitBoard.resolveCCSlotBadgeText(btnOrder)
-                if entry.eligible then
-                    anyEligible = true
-                    local rangeTag = (not entry.inRange)
-                        and (" |cffE77C70(" .. ns:L("TIP_SPELL_OUT_OF_RANGE") .. ")|r")
-                        or ""
-                    GameTooltip:AddLine(
-                        string.format(" • [%s] %s%s", slotBadge, entry.ccDef.name, rangeTag),
-                        unpack(STYLE.textMain)
-                    )
-                else
-                    local allowedStr = ns:FormatAllowedTypesText(entry.ccDef)
-                    GameTooltip:AddLine(
-                        " • " .. string.format(ns:L("TIP_CC_INELIGIBLE_NOTE"), slotBadge, entry.ccDef.name, allowedStr),
-                        unpack(STYLE.textMuted)
-                    )
-                end
-            end
-        end
-
-        if not anyEligible then
-            GameTooltip:AddLine(
-                " • " .. string.format(ns:L("TIP_CC_NONE_FOR_TYPE"), cTypeLabel),
-                unpack(STYLE.warn)
-            )
-        else
-            GameTooltip:AddLine(" ")
-            for _, entry in ipairs(ccSt.ccEntries) do
-                if entry.eligible then
-                    local btnOrder = TacticalUnitBoard.resolveBoundCCButtonOrder(cell, entry.ccDef, entry.usableOrder or entry.slotIndex)
-                    local tipKey = TacticalUnitBoard.resolveCCSlotActionTipKey(btnOrder)
-                    GameTooltip:AddLine(
-                        string.format(ns:L(tipKey), entry.ccDef.name),
-                        ACCENT_R, ACCENT_G, ACCENT_B
-                    )
-                end
-            end
-        end
-
-        GameTooltip:Show()
-        return
-    end
 
     local unit = cell.unit
     if not unit or not safeVal(UnitExists(unit)) then return end
@@ -504,16 +355,14 @@ function TacticalUnitBoard.assignCellActiveEdges(cell, show, r, g, b)
     end
 end
 
-local DEFAULT_SECTION_ORDER = { "buff", "cleanse", "cc" }
-local sectionOrder = { "buff", "cleanse", "cc" }
+local DEFAULT_SECTION_ORDER = { "buff", "cleanse" }
+local sectionOrder = { "buff", "cleanse" }
 local draggingCategory = nil
 local dragBadge = nil
 
 function TacticalUnitBoard.resolveSectionGroupLabel(groupKey)
     if groupKey == "cleanse" then
         return ns:L("GROUP_CLEANSE")
-    elseif groupKey == "cc" then
-        return ns:L("GROUP_CC")
     else
         return ns:L("GROUP_BUFF")
     end
@@ -521,7 +370,7 @@ end
 
 function TacticalUnitBoard.prepareSectionOrder()
     if not EzWoW_SpellControlDB then return sectionOrder end
-    local isValid = { buff = true, cleanse = true, cc = true }
+    local isValid = { buff = true, cleanse = true }
     local newOrder, visitedMap = {}, {}
     if type(EzWoW_SpellControlDB.sectionOrder) == "table" then
         for _, entryKey in ipairs(EzWoW_SpellControlDB.sectionOrder) do
@@ -1253,15 +1102,8 @@ function TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, frameName, sect
             self.ezSeqRan = true
         end
         local unit = self.unit
-        local role = self.sectionRole
         local function syncAfterClick()
-            if role == "CC" then
-                ns:ScanCCTargetState()
-                if not (InCombatLockdown and InCombatLockdown()) then
-                    ns:ApplyCCTargetCellSecureAttributes(self)
-                end
-                ns:UpdateCCTargetCellVisual()
-            elseif unit and safeVal(UnitExists(unit)) then
+            if unit and safeVal(UnitExists(unit)) then
                 ns:ScanUnitState(unit)
                 ns:UpdateSingleUnitCell(unit)
             end
@@ -1279,13 +1121,7 @@ function TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, frameName, sect
 
     b:SetScript("OnEnter", function(self)
         self._isHovered = true
-        if self.sectionRole == "CC" then
-            ns:ScanCCTargetState()
-            if not (InCombatLockdown and InCombatLockdown()) then
-                ns:ApplyCCTargetCellSecureAttributes(self)
-            end
-            ns:UpdateCCTargetCellVisual()
-        elseif self.unit and not (InCombatLockdown and InCombatLockdown()) then
+        if self.unit and not (InCombatLockdown and InCombatLockdown()) then
             local stateEntry = ns:ScanUnitState(self.unit)
             if self.sectionRole == "CLEANSE" then
                 ns:ApplyCleanseCellSecureAttributes(self, self.unit, stateEntry)
@@ -1452,11 +1288,10 @@ function ns:BuildTacticalUnitBoard()
         if not EzWoW_SpellControlDB or (InCombatLockdown and InCombatLockdown()) then return end
         EzWoW_SpellControlDB.collapsedGroups = EzWoW_SpellControlDB.collapsedGroups or {}
         local collapsedGroups = EzWoW_SpellControlDB.collapsedGroups
-        local allCollapsed = collapsedGroups.buff and collapsedGroups.cleanse and collapsedGroups.cc
+        local allCollapsed = collapsedGroups.buff and collapsedGroups.cleanse
         local nextState = not allCollapsed
         collapsedGroups.buff = nextState
         collapsedGroups.cleanse = nextState
-        collapsedGroups.cc = nextState
         EzWoW_SpellControlDB.collapsed = nextState
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
@@ -1513,11 +1348,9 @@ function ns:BuildTacticalUnitBoard()
 
     unitBoardFrame.buffHeader = TacticalUnitBoard.buildSectionHeaderBar(unitBoardFrame, "buff")
     unitBoardFrame.cleanseHeader = TacticalUnitBoard.buildSectionHeaderBar(unitBoardFrame, "cleanse")
-    unitBoardFrame.ccGroupHeader = TacticalUnitBoard.buildSectionHeaderBar(unitBoardFrame, "cc")
     unitBoardFrame.sectionHeaders = {
         buff = unitBoardFrame.buffHeader,
         cleanse = unitBoardFrame.cleanseHeader,
-        cc = unitBoardFrame.ccGroupHeader,
     }
     unitBoardFrame.groupHeader = unitBoardFrame.buffHeader
 
@@ -1528,7 +1361,6 @@ function ns:BuildTacticalUnitBoard()
         unitBoardFrame.cleanseCells[index] = TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, "EzWoWCleanseSlotCell" .. index, "CLEANSE")
     end
     unitBoardFrame.cells = unitBoardFrame.buffCells
-    unitBoardFrame.ccTargetCell = TacticalUnitBoard.buildSecureSlotButton(unitBoardFrame, "EzWoWCCTargetSlotCell", "CC")
 
     unitBoardFrame:HookScript("OnUpdate", function(_, elapsed)
         elapsed = elapsed or 0
@@ -1633,7 +1465,6 @@ function ns:LayoutBoardCells()
     local coordY = 32
     local containsBuffSection = (#self.learnedBuffDefs > 0) or (#self.learnedDispelList == 0)
     local containsCleanseSection = (#self.learnedDispelList > 0)
-    local containsCCSection = (EzWoW_SpellControlDB.showCC ~= false) and (#self.learnedCCDefs > 0)
     local locked = EzWoW_SpellControlDB.lockBoard
 
     -- grid position of every unit; in a raid each group starts a new row
@@ -1724,35 +1555,6 @@ function ns:LayoutBoardCells()
                 unitBoardFrame.cleanseHeader:Hide()
                 layoutUnitCellArray(unitBoardFrame.cleanseCells, false)
             end
-        elseif secKey == "cc" then
-            local ccCell = unitBoardFrame.ccTargetCell
-            if containsCCSection then
-                local ccCollapsed = collapsedGroups.cc and true or false
-                configureHeaderBar(unitBoardFrame.ccGroupHeader, ccCollapsed, self:L("GROUP_CC"), 1)
-                if not ccCollapsed then
-                    ccCell:ClearAllPoints()
-                    ccCell:SetSize(size, size)
-                    if ccCell.nameText then ccCell.nameText:SetShown(size > ns.SMALL_CELL_SIZE) end
-                    ccCell:SetPoint("TOPLEFT", unitBoardFrame, "TOPLEFT", 8, -coordY)
-                    ccCell.unit = "target"
-                    self:ApplyCCTargetCellSecureAttributes(ccCell)
-                    ccCell:Show()
-                    self:UpdateCCTargetCellVisual()
-                    coordY = coordY + (size + 4) + 5
-                else
-                    if ccCell._isHovered or (GameTooltip and GameTooltip:IsOwned(ccCell)) then
-                        GameTooltip:Hide()
-                    end
-                    ccCell._isHovered = false
-                    ccCell._lastTipSig = nil
-                    ccCell:Hide()
-                end
-            else
-                unitBoardFrame.ccGroupHeader:Hide()
-                if ccCell then
-                    ccCell:Hide()
-                end
-            end
         end
     end
 
@@ -1775,7 +1577,7 @@ function ns:LayoutBoardCells()
     end
 
     self:ShowHoverUI(hoverUI)
-    local shouldShow = EzWoW_SpellControlDB.showBoard and (numUnits > 0 or containsCCSection)
+    local shouldShow = EzWoW_SpellControlDB.showBoard and numUnits > 0
     unitBoardFrame:SetShown(shouldShow and true or false)
 end
 
@@ -1848,12 +1650,7 @@ end
 function TacticalUnitBoard.cellCooldownSpellID(cell)
     if not cell or cell._isEmptySlot or not cell:IsShown() then return nil end
     local role = cell.sectionRole or "BUFF"
-    if role == "CC" then
-        local ccSt = ns.ccTargetState
-        local entry = ccSt and ccSt.primaryUsableEntry
-        local def = (entry and entry.ccDef) or (ns.learnedCCDefs and ns.learnedCCDefs[1])
-        return def and def.id
-    elseif role == "CLEANSE" then
+    if role == "CLEANSE" then
         return ns.primaryDispelSpell and ns.primaryDispelSpell.id
     end
     local choice = ns.GetCellLeftClickChoice and ns:GetCellLeftClickChoice(cell)
@@ -1931,10 +1728,6 @@ function TacticalUnitBoard.refreshAllCellCooldowns(changed)
             end
         end
     end
-    local ccCell = board.ccTargetCell
-    if ccCell and ccCell:IsShown() then
-        TacticalUnitBoard.refreshCellCooldown(ccCell, changed)
-    end
 end
 
 -- a cast starts the global cooldown on every cell; several events in one frame are drawn once
@@ -1955,68 +1748,8 @@ cooldownEvents:SetScript("OnEvent", function()
     end
 end)
 
-function ns:UpdateCCTargetCellVisual()
-    local unitBoardFrame = self.boardFrame
-    if not unitBoardFrame or not unitBoardFrame.ccTargetCell then return end
-    local cell = unitBoardFrame.ccTargetCell
-    if not cell:IsShown() then return end
-
-    local size = ns:GetCellSize()
-    local ccSt = self.ccTargetState or self:ScanCCTargetState()
-
-    if not ccSt.hasEnemyTarget or ccSt.isDead then
-        TacticalUnitBoard.assignSlotEmptyState(cell)
-        return
-    end
-
-    TacticalUnitBoard.restoreSlotVisibleState(cell)
-    cell.classBar:SetColorTexture(0.92, 0.38, 0.36, 1)
-    if ccSt.name then
-        local enemyShortName = "⚔" .. TacticalUnitBoard.shortenUnitName(ccSt.name, 3)
-        TacticalUnitBoard.fitFontStringToWidth(cell.nameText, enemyShortName, size - 4, 10, 7)
-    elseif ccSt.rawNameSecret then
-        -- the next readable name must fit again; drop the scale left by the last fit
-        cell.nameText._lastFitText = nil
-        if cell.nameText.SetTextScale then cell.nameText:SetTextScale(1) end
-        cell.nameText:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
-        cell.nameText:SetWordWrap(false)
-        pcall(cell.nameText.SetText, cell.nameText, ccSt.rawName)
-    else
-        TacticalUnitBoard.fitFontStringToWidth(cell.nameText, "⚔", size - 4, 10, 7)
-    end
-    cell.nameText:SetTextColor(unpack(STYLE.textMain))
-
-    local entry = ccSt.primaryUsableEntry
-    if entry and entry.ccDef then
-        cell.icon:SetTexture(entry.ccDef.icon or DEFAULT_SLOT_ICON)
-        cell.innerBg:SetColorTexture(0.22, 0.11, 0.06, 0.56)
-        TacticalUnitBoard.assignCellActiveEdges(cell, true, 0.95, 0.55, 0.34)
-        local btnOrder = TacticalUnitBoard.resolveBoundCCButtonOrder(cell, entry.ccDef, 1)
-        local badgeText = TacticalUnitBoard.resolveCCSlotBadgeText(btnOrder)
-        TacticalUnitBoard.fitFontStringToWidth(cell.badgeText, badgeText, size - 4, 9, 7)
-        cell.badgeText:SetTextColor(1.00, 0.82, 0.48)
-
-        local inRangeRaw, inRangeSecret = TacticalUnitBoard.determineSlotRange(entry.inRangeRaw, entry.inRangeSecret, entry.inRange, false)
-        TacticalUnitBoard.commitSlotRangeVisual(cell, inRangeRaw, inRangeSecret, true, size, self:L("BADGE_OUT_OF_RANGE"))
-    else
-        local fallbackIcon = (self.learnedCCDefs[1] and self.learnedCCDefs[1].icon) or DEFAULT_SLOT_ICON
-        cell.icon:SetTexture(fallbackIcon)
-        cell.icon:SetDesaturated(true)
-        if cell.shadeHost then cell.shadeHost:SetAlpha(1) end
-        cell.innerBg:SetColorTexture(0.08, 0.08, 0.10, 0.82)
-        cell.border:SetVertexColor(0.24, 0.28, 0.32, 0.90)
-        TacticalUnitBoard.assignCellActiveEdges(cell, false)
-        TacticalUnitBoard.fitFontStringToWidth(cell.badgeText, self:L("BADGE_CC_NONE"), size - 4, 9, 7)
-        cell.badgeText:SetTextColor(unpack(STYLE.textMuted))
-    end
-end
-
 function ns:UpdateSingleUnitCellVisualOnly(cell)
     if not cell then return end
-    if cell.sectionRole == "CC" then
-        self:UpdateCCTargetCellVisual()
-        return
-    end
     if not cell.unit then return end
 
     local state = self.unitStates[cell.unit]
@@ -2201,19 +1934,11 @@ function ns:UpdateSingleUnitCellVisualOnly(cell)
 end
 
 -- every redraw of a cell also brings its cooldown swipe up to date (the spell its left
--- click casts may have changed); the CC cell's redraw goes through UpdateCCTargetCellVisual
+-- click casts may have changed)
 local drawUnitCellVisual = ns.UpdateSingleUnitCellVisualOnly
-local drawCCTargetCellVisual = ns.UpdateCCTargetCellVisual
-function ns:UpdateCCTargetCellVisual()
-    drawCCTargetCellVisual(self)
-    local ccCell = self.boardFrame and self.boardFrame.ccTargetCell
-    if ccCell and ccCell:IsShown() then
-        TacticalUnitBoard.refreshCellCooldown(ccCell)
-    end
-end
 function ns:UpdateSingleUnitCellVisualOnly(cell)
     drawUnitCellVisual(self, cell)
-    if cell and cell.sectionRole ~= "CC" then
+    if cell then
         TacticalUnitBoard.refreshCellCooldown(cell)
     end
 end
@@ -2239,17 +1964,6 @@ function ns:UpdateSingleUnitCell(unit)
             if cCell._isHovered and cCell:IsMouseOver() then
                 TacticalUnitBoard.presentCellTooltip(cCell, true)
             end
-        end
-    end
-
-    if unit == "target" and self.boardFrame.ccTargetCell then
-        local ccCell = self.boardFrame.ccTargetCell
-        if not (InCombatLockdown and InCombatLockdown()) then
-            self:ApplyCCTargetCellSecureAttributes(ccCell)
-        end
-        self:UpdateCCTargetCellVisual()
-        if ccCell._isHovered and ccCell:IsMouseOver() then
-            TacticalUnitBoard.presentCellTooltip(ccCell, true)
         end
     end
 end
@@ -2301,17 +2015,6 @@ function ns:UpdateBoardVisuals()
             if cCell._isHovered and cCell:IsMouseOver() then
                 TacticalUnitBoard.presentCellTooltip(cCell, false)
             end
-        end
-    end
-
-    if self.boardFrame.ccTargetCell then
-        local ccCell = self.boardFrame.ccTargetCell
-        if not inCombat then
-            self:ApplyCCTargetCellSecureAttributes(ccCell)
-        end
-        self:UpdateCCTargetCellVisual()
-        if ccCell._isHovered and ccCell:IsMouseOver() then
-            TacticalUnitBoard.presentCellTooltip(ccCell, false)
         end
     end
 end

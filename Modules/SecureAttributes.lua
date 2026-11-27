@@ -474,7 +474,6 @@ function ns:ApplyBuffCellSecureAttributes(cell, unit, state)
 
     cell.sectionRole = "BUFF"
     cell.targetClickIsBuff = true
-    cell.targetClickIsCC = false
 
     -- the bound* fields drive the badge/tooltip; in combat the secure attributes stay frozen,
     -- so keep showing what a click will really cast until they can be re-applied
@@ -551,7 +550,6 @@ function ns:ApplyCleanseCellSecureAttributes(cell, unit, state)
 
     cell.sectionRole = "CLEANSE"
     cell.targetClickIsBuff = false
-    cell.targetClickIsCC = false
 
     if InCombatLockdown and InCombatLockdown() then
         self.pendingSecureUpdate = true
@@ -607,105 +605,10 @@ function ns:ApplyCleanseCellSecureAttributes(cell, unit, state)
     cell.boundCtrlRClickBuff = buff2Spell
 end
 
-function ns:ApplyCCTargetCellSecureAttributes(cell, unitForScan)
-    if not cell then return end
-    if InCombatLockdown and InCombatLockdown() then
-        self.pendingSecureUpdate = true
-        return
-    end
-
-    cell.sectionRole = "CC"
-    cell.unit = "target"
-    cell.targetClickIsBuff = false
-    cell.targetClickIsCC = true
-
-    SecureCellController.assignAttrIfChanged(cell, "unit", "target")
-    SecureCellController.assignAttrIfChanged(cell, "shift-type1", nil)
-    SecureCellController.assignAttrIfChanged(cell, "shift-spell1", nil)
-    SecureCellController.assignAttrIfChanged(cell, "alt-type1", "target")
-
-    local ccSt = self:ScanCCTargetState(unitForScan)
-    local defaultDefs = self:GetDefaultOrderedCCDefs()
-    local cc1 = nil
-    local cc2 = nil
-    if ccSt then
-        if ccSt.primaryUsableEntry and ccSt.primaryUsableEntry.ccDef then
-            cc1 = ccSt.primaryUsableEntry.ccDef.fullCastName
-        end
-        if ccSt.secondaryUsableEntry and ccSt.secondaryUsableEntry.ccDef then
-            cc2 = ccSt.secondaryUsableEntry.ccDef.fullCastName
-        end
-    end
-    if not cc1 then
-        cc1 = defaultDefs[1] and defaultDefs[1].fullCastName
-    end
-    if not cc2 then
-        for _, def in ipairs(defaultDefs) do
-            if def.fullCastName and def.fullCastName ~= cc1 then
-                cc2 = def.fullCastName
-                break
-            end
-        end
-    end
-
-    local cc3 = nil
-    for _, def in ipairs(defaultDefs) do
-        if def.fullCastName and def.fullCastName ~= cc1 and def.fullCastName ~= cc2 then
-            cc3 = def.fullCastName
-            break
-        end
-    end
-    local savedCtrl3 = cc3
-    cc3 = cc3 or cc1
-    local cc4 = (defaultDefs[4] and defaultDefs[4].fullCastName) or cc2
-
-    if cc1 then
-        SecureCellController.assignAttrIfChanged(cell, "type1", "spell")
-        SecureCellController.assignAttrIfChanged(cell, "spell1", cc1)
-    else
-        SecureCellController.assignAttrIfChanged(cell, "type1", "target")
-        SecureCellController.assignAttrIfChanged(cell, "spell1", nil)
-    end
-
-    if cc2 then
-        SecureCellController.assignAttrIfChanged(cell, "type2", "spell")
-        SecureCellController.assignAttrIfChanged(cell, "spell2", cc2)
-    else
-        SecureCellController.assignAttrIfChanged(cell, "type2", nil)
-        SecureCellController.assignAttrIfChanged(cell, "spell2", nil)
-    end
-
-    if cc3 then
-        SecureCellController.assignAttrIfChanged(cell, "ctrl-type1", "spell")
-        SecureCellController.assignAttrIfChanged(cell, "ctrl-spell1", cc3)
-    else
-        SecureCellController.assignAttrIfChanged(cell, "ctrl-type1", nil)
-        SecureCellController.assignAttrIfChanged(cell, "ctrl-spell1", nil)
-    end
-
-    if cc4 then
-        SecureCellController.assignAttrIfChanged(cell, "ctrl-type2", "spell")
-        SecureCellController.assignAttrIfChanged(cell, "ctrl-spell2", cc4)
-    else
-        SecureCellController.assignAttrIfChanged(cell, "ctrl-type2", nil)
-        SecureCellController.assignAttrIfChanged(cell, "ctrl-spell2", nil)
-    end
-
-    cell.boundLClickCC = cc1
-    cell.boundRClickCC = cc2
-    cell.boundCtrlLClickCC = savedCtrl3
-
-    if unitForScan and unitForScan ~= "target" then
-        self:ScanCCTargetState("target")
-    end
-end
-
 function ns:ApplyCellSecureAttributes(cell, unit, state)
     if not cell then return end
     if cell.sectionRole == "CLEANSE" then
         self:ApplyCleanseCellSecureAttributes(cell, unit, state)
-    elseif cell.sectionRole == "CC" then
-        self:ApplyCCTargetCellSecureAttributes(cell)
     else
         self:ApplyBuffCellSecureAttributes(cell, unit, state)
     end
@@ -739,7 +642,6 @@ local EVENTS_TO_REGISTER = {
     "PLAYER_LEVEL_UP",
     "GROUP_ROSTER_UPDATE",
     "PLAYER_TARGET_CHANGED",
-    "UPDATE_MOUSEOVER_UNIT",
     "UNIT_AURA",
     "UNIT_IN_RANGE_UPDATE",
     "UNIT_LEVEL",
@@ -857,7 +759,6 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
         -- "party2" / "raid5" may be someone else now
         if ns.unitWheelBuffKey then wipe(ns.unitWheelBuffKey) end
         if ns.unitWheelBuffWasActive then wipe(ns.unitWheelBuffWasActive) end
-        ns:ScanCCTargetState()
         if InCombatLockdown and InCombatLockdown() then
             ns.pendingSecureUpdate = true
             ns:ScanAllActiveUnits()
@@ -870,7 +771,6 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
         end
     elseif event == "PLAYER_TARGET_CHANGED" then
         ns:ResetLeftClickSequences(true)
-        ns:ScanCCTargetState()
         if InCombatLockdown and InCombatLockdown() then
             ns.pendingSecureUpdate = true
             ns:ScanAllActiveUnits()
@@ -898,19 +798,6 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
                 end
             end
         end
-    elseif event == "UPDATE_MOUSEOVER_UNIT" then
-        if UnitExists and safeVal(UnitExists("mouseover")) then
-            ns:GetUnitCreatureTypeInfo("mouseover")
-            if not (InCombatLockdown and InCombatLockdown()) then
-                local containsEnemyTarget = ns.ccTargetState and ns.ccTargetState.hasEnemyTarget
-                if not containsEnemyTarget and UnitCanAttack then
-                    local okAtk, canAtk = pcall(UnitCanAttack, "player", "mouseover")
-                    if okAtk and safeVal(canAtk) and ns.boardFrame and ns.boardFrame.ccTargetCell then
-                        ns:ApplyCCTargetCellSecureAttributes(ns.boardFrame.ccTargetCell, "mouseover")
-                    end
-                end
-            end
-        end
     elseif event == "UNIT_IN_RANGE_UPDATE" then
         local unitRef = safeVal(arg1)
         if unitRef then
@@ -928,15 +815,6 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
     elseif event == "UNIT_AURA" or event == "UNIT_LEVEL" or event == "UNIT_NAME_UPDATE" then
         local unitRef = safeVal(arg1)
         if unitRef then
-            if unitRef == "target" then
-                pcall(ns.ScanCCTargetState, ns)
-                if ns.boardFrame and ns.boardFrame.ccTargetCell and not (InCombatLockdown and InCombatLockdown()) then
-                    ns:ApplyCCTargetCellSecureAttributes(ns.boardFrame.ccTargetCell)
-                end
-                if ns.UpdateCCTargetCellVisual then
-                    ns:UpdateCCTargetCellVisual()
-                end
-            end
             if ns.unitStates[unitRef] then
                 if event == "UNIT_AURA" and IsInRaid and IsInRaid() then
                     pendingAuraUnits[unitRef] = true

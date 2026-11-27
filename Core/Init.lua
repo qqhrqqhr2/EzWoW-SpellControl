@@ -96,7 +96,6 @@ ns.DEFAULTS = {
     showTarget = true,
     keepTargetCell = true,
     showPets = true,
-    showCC = true,
     soundAlert = true,
     smartBuff = true,
     trackSecondBuff = true,
@@ -114,7 +113,6 @@ ns.DEFAULTS = {
     collapsedGroups = {
         buff = false,
         cleanse = false,
-        cc = false,
     },
     cellSize = 30,
     raidCellSize = 24,
@@ -134,19 +132,9 @@ ns.learnedDispelList = {}
 ns.primaryDispelSpell = nil
 ns.secondaryDispelSpell = nil
 ns.learnedBuffDefs = {}
-ns.learnedCCDefs = {}
-ns.ccSpellIdMap = {}
-ns.ccSpellNameMap = {}
-ns.activeCCList = {}
 ns.unitStates = {}
 ns.unitWheelBuffKey = {}
 ns.unitWheelBuffWasActive = {}
-ns.creatureTypeCacheByName = {}
-ns.ccTargetState = {
-    hasEnemyTarget = false,
-    ccEntries = {},
-    ineligibleCCs = {},
-}
 ns.activeUnits = { "player" }
 ns.pendingSecureUpdate = false
 ns.lastAlertTime = 0
@@ -201,9 +189,9 @@ function ns:InitializeDatabase()
     if EzWoW_SpellControlDB.collapsedGroups.cleanse == nil then
         EzWoW_SpellControlDB.collapsedGroups.cleanse = false
     end
-    if EzWoW_SpellControlDB.collapsedGroups.cc == nil then
-        EzWoW_SpellControlDB.collapsedGroups.cc = false
-    end
+    -- the crowd-control section was taken out (2026-11-27): its saved settings go
+    EzWoW_SpellControlDB.showCC = nil
+    EzWoW_SpellControlDB.collapsedGroups.cc = nil
 end
 
 ns.UnwrapSafeValue = CoreBootstrap.safeVal

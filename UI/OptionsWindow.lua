@@ -121,7 +121,7 @@ function ns:CreateSettingsWindow()
     local config = CreateFrame("Frame", "EzWoWSpellControlSettings", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
     -- (taller than the screen: shrunk to fit, Libs/EzWoWGamePad)
     if ns.GamePad and ns.GamePad.KeepOnScreen then ns.GamePad.KeepOnScreen(config) end
-    config:SetSize(420, 992)
+    config:SetSize(420, 950)
     config:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     config:SetFrameStrata("FULLSCREEN_DIALOG")
     config:SetToplevel(true)
@@ -246,7 +246,7 @@ function ns:CreateSettingsWindow()
         return { check = themeColor, text = resolvedValue, dbKey = dbKey, labelKey = labelKey }
     end
 
-    config:SetSize(420, 992)
+    config:SetSize(420, 950)
     config.secGeneral = section(-66)
     config.checks = {
         optionCheck("smartBuff",       -90,  "OPT_SMART_BUFF"),
@@ -258,14 +258,13 @@ function ns:CreateSettingsWindow()
         optionCheck("showTarget",      -234, "OPT_SHOW_TARGET"),
         optionCheck("keepTargetCell",  -258, "OPT_KEEP_TARGET_CELL"),
         optionCheck("showPets",        -282, "OPT_SHOW_PETS"),
-        optionCheck("showCC",          -306, "OPT_SHOW_CC"),
-        optionCheck("growUp",          -330, "OPT_GROW_UP"),
-        optionCheck("spellUprank",     -354, "OPT_SPELL_UPRANK"),
+        optionCheck("growUp",          -306, "OPT_GROW_UP"),
+        optionCheck("spellUprank",     -330, "OPT_SPELL_UPRANK"),
     }
 
     -- raid groups this player looks after (1-8); off groups get no cells in a raid
     local raidGroupsLabel = config:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    raidGroupsLabel:SetPoint("TOPLEFT", 24, -388)
+    raidGroupsLabel:SetPoint("TOPLEFT", 24, -364)
     raidGroupsLabel:SetWidth(118)
     raidGroupsLabel:SetJustifyH("LEFT")
     config.raidGroupsLabel = raidGroupsLabel
@@ -273,7 +272,7 @@ function ns:CreateSettingsWindow()
     for groupNum = 1, 8 do
         local groupBtn = CreateFrame("Button", nil, config, BackdropTemplateMixin and "BackdropTemplate" or nil)
         groupBtn:SetSize(28, 24)
-        groupBtn:SetPoint("TOPLEFT", 148 + (groupNum - 1) * 31, -382)
+        groupBtn:SetPoint("TOPLEFT", 148 + (groupNum - 1) * 31, -358)
         ns.UIKit:ApplyBackdrop(groupBtn)
         local groupText = groupBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         groupText:SetPoint("CENTER")
@@ -311,7 +310,7 @@ function ns:CreateSettingsWindow()
         config.raidGroupBtns[groupNum] = groupBtn
     end
 
-    config.secSpells = section(-422)
+    config.secSpells = section(-398)
 
     local function constructSelectBtn(x, y, w, onClick)
         local buttonWidget = CreateFrame("Button", nil, config, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -330,8 +329,8 @@ function ns:CreateSettingsWindow()
         return buttonWidget
     end
 
-    config.slot1Btn = constructSelectBtn(20, -448, 187, function() ns:CycleSelectedBuffSlot(1) end)
-    config.slot2Btn = constructSelectBtn(213, -448, 187, function() ns:CycleSelectedBuffSlot(2) end)
+    config.slot1Btn = constructSelectBtn(20, -424, 187, function() ns:CycleSelectedBuffSlot(1) end)
+    config.slot2Btn = constructSelectBtn(213, -424, 187, function() ns:CycleSelectedBuffSlot(2) end)
     -- Hover help: these boxes change the buff on each click
     for slotNum, slotBtn in ipairs({ config.slot1Btn, config.slot2Btn }) do
         slotBtn:HookScript("OnEnter", function(self)
@@ -345,8 +344,8 @@ function ns:CreateSettingsWindow()
     end
 
     local learnedPanel = CreateFrame("Frame", nil, config, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    learnedPanel:SetPoint("TOPLEFT", 20, -481)
-    learnedPanel:SetSize(380, 62)
+    learnedPanel:SetPoint("TOPLEFT", 20, -457)
+    learnedPanel:SetSize(380, 44)
     ns.UIKit:ApplyBackdrop(learnedPanel)
     learnedPanel:SetBackdropColor(0.055, 0.075, 0.098, 0.90)
     learnedPanel:SetBackdropBorderColor(0.204, 0.298, 0.357, 0.85)
@@ -362,7 +361,7 @@ function ns:CreateSettingsWindow()
     learnedBox:SetTextColor(0.655, 0.725, 0.773)
     config.learnedBox = learnedBox
 
-    config.langBtn = constructSelectBtn(20, -551, 380, nil)
+    config.langBtn = constructSelectBtn(20, -509, 380, nil)
     -- click the box, then pick a language from the list
     local langItems = {}
     for index, entryValue in ipairs(ns.SUPPORTED_LANGS) do langItems[index] = { value = entryValue.code, text = entryValue.label } end
@@ -378,7 +377,7 @@ function ns:CreateSettingsWindow()
         end,
     })
 
-    config.secControls = section(-590)
+    config.secControls = section(-548)
 
     local function stepper(x, y, getVal, setVal, minVal, maxVal, step)
         local formatLocalizedLabel = config:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -415,7 +414,7 @@ function ns:CreateSettingsWindow()
     end
 
     config.sizeLabel, config.sizeValue = stepper(
-        20, -618,
+        20, -576,
         function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.cellSize) or 30 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
@@ -429,7 +428,7 @@ function ns:CreateSettingsWindow()
     )
 
     config.raidSizeLabel, config.raidSizeValue = stepper(
-        210, -618,
+        210, -576,
         function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.raidCellSize) or 24 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
@@ -443,7 +442,7 @@ function ns:CreateSettingsWindow()
     )
 
     config.colsLabel, config.colsValue = stepper(
-        20, -652,
+        20, -610,
         function() return (EzWoW_SpellControlDB and EzWoW_SpellControlDB.columns) or 5 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
@@ -460,7 +459,7 @@ function ns:CreateSettingsWindow()
         return math.floor(((EzWoW_SpellControlDB and EzWoW_SpellControlDB.opacity) or 1) * 100 + 0.5)
     end
     config.alphaLabel, config.alphaValue = stepper(
-        210, -652,
+        210, -610,
         opacityPct,
         function(entryValue)
             if EzWoW_SpellControlDB then EzWoW_SpellControlDB.opacity = entryValue / 100 end
@@ -470,7 +469,7 @@ function ns:CreateSettingsWindow()
 
     -- buffs running out within this many minutes count as missing (0 = off)
     config.expireLabel, config.expireValue = stepper(
-        210, -687,
+        210, -645,
         function() return (EzWoW_SpellControlDB and tonumber(EzWoW_SpellControlDB.expiringMinutes)) or 0 end,
         function(entryValue)
             if not EzWoW_SpellControlDB then return end
@@ -480,7 +479,7 @@ function ns:CreateSettingsWindow()
         0, 10, 1
     )
     local expireHover = CreateFrame("Frame", nil, config)
-    expireHover:SetPoint("TOPLEFT", config, "TOPLEFT", 210, -687)
+    expireHover:SetPoint("TOPLEFT", config, "TOPLEFT", 210, -645)
     expireHover:SetSize(92, 29)
     expireHover:EnableMouse(true)
     expireHover:SetScript("OnEnter", function(self)
@@ -494,7 +493,7 @@ function ns:CreateSettingsWindow()
 
     local fadeCheck = CreateFrame("CheckButton", nil, config, "UICheckButtonTemplate")
     fadeCheck:SetSize(26, 26)
-    fadeCheck:SetPoint("TOPLEFT", 20, -687)
+    fadeCheck:SetPoint("TOPLEFT", 20, -645)
     local fadeText = config:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     fadeText:SetPoint("LEFT", fadeCheck, "RIGHT", 4, 0)
     fadeText:SetWidth(160)
@@ -541,14 +540,14 @@ function ns:CreateSettingsWindow()
         return buttonWidget
     end
 
-    config.lockBtn = actionBtn(20, -720, function()
+    config.lockBtn = actionBtn(20, -678, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.lockBoard = not EzWoW_SpellControlDB.lockBoard
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
     end)
 
-    config.visBtn = actionBtn(219, -720, function()
+    config.visBtn = actionBtn(219, -678, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.showBoard = not EzWoW_SpellControlDB.showBoard
         if InCombatLockdown and InCombatLockdown() then
@@ -558,23 +557,23 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.expandBtn = actionBtn(20, -755, function()
+    config.expandBtn = actionBtn(20, -713, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.collapsed = false
-        EzWoW_SpellControlDB.collapsedGroups = { buff = false, cleanse = false, cc = false }
+        EzWoW_SpellControlDB.collapsedGroups = { buff = false, cleanse = false }
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
     end)
 
-    config.collapseBtn = actionBtn(219, -755, function()
+    config.collapseBtn = actionBtn(219, -713, function()
         if not EzWoW_SpellControlDB then return end
         EzWoW_SpellControlDB.collapsed = true
-        EzWoW_SpellControlDB.collapsedGroups = { buff = true, cleanse = true, cc = true }
+        EzWoW_SpellControlDB.collapsedGroups = { buff = true, cleanse = true }
         ns:LayoutBoardCells()
         ns:RefreshSettingsTexts()
     end)
 
-    config.refreshBtn = actionBtn(20, -790, function()
+    config.refreshBtn = actionBtn(20, -748, function()
         ns:ScanLearnedSpells()
         ns:RebuildActiveUnits()
         ns:LayoutBoardCells()
@@ -582,7 +581,7 @@ function ns:CreateSettingsWindow()
         ns:RefreshSettingsTexts()
     end)
 
-    config.resetPosBtn = actionBtn(219, -790, function()
+    config.resetPosBtn = actionBtn(219, -748, function()
         if InCombatLockdown and InCombatLockdown() then
             DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_COMBAT_BLOCKED"))
             return
@@ -591,7 +590,7 @@ function ns:CreateSettingsWindow()
             EzWoW_SpellControlDB.boardPoint = nil
             EzWoW_SpellControlDB.manualWidth = nil
             EzWoW_SpellControlDB.manualHeight = nil
-            EzWoW_SpellControlDB.sectionOrder = { "buff", "cleanse", "cc" }
+            EzWoW_SpellControlDB.sectionOrder = { "buff", "cleanse" }
         end
         if ns.boardFrame then
             ns.boardFrame:ClearAllPoints()
@@ -601,7 +600,7 @@ function ns:CreateSettingsWindow()
         DEFAULT_CHAT_FRAME:AddMessage("|cff5CE0B8EzWoW - Spell Control:|r " .. ns:L("MSG_POS_RESET"))
     end)
 
-    config.spellsByLevelBtn = actionBtn(20, -825, function()
+    config.spellsByLevelBtn = actionBtn(20, -783, function()
         if ns.ToggleSpellsByLevel then ns:ToggleSpellsByLevel() end
     end)
 
@@ -633,8 +632,8 @@ function ns:CreateSettingsWindow()
         return { check = check, text = label, dbKey = dbKey, width = width }
     end
 
-    config.levelUpNoticeCheck = simpleCheck("levelUpSpellNotice", 219, -827, 150)
-    config.spellbookDockCheck = simpleCheck("spellbookDock", 20, -860, 345, function()
+    config.levelUpNoticeCheck = simpleCheck("levelUpSpellNotice", 219, -785, 150)
+    config.spellbookDockCheck = simpleCheck("spellbookDock", 20, -818, 345, function()
         if ns.UpdateSpellbookPanel then ns:UpdateSpellbookPanel() end
     end)
 
@@ -755,18 +754,10 @@ function ns:RefreshSettingsTexts()
     end
     local dispelStr = (#dispelParts > 0) and table.concat(dispelParts, ", ") or self:L("SPELL_NOT_LEARNED")
 
-    local ccParts = {}
-    for entryIndex, ccEntry in ipairs(self.learnedCCDefs) do
-        local prefix = (entryIndex == 1) and lTag or ((entryIndex == 2) and rTag or "")
-        local typeNote = ccEntry.allowedTypeKeys and (" (" .. self:FormatAllowedTypesText(ccEntry) .. ")") or ""
-        table.insert(ccParts, prefix .. ccEntry.name .. typeNote)
-    end
-    local ccStr = (#ccParts > 0) and table.concat(ccParts, ", ") or self:L("SPELL_NOT_LEARNED")
 
     themeColor.learnedBox:SetText(
         "|cffF1BD57" .. self:L("OPT_LEARNED_BUFFS") .. "|r " .. buffStr .. "\n" ..
-        "|cff5CE0B8" .. self:L("OPT_LEARNED_DISPELS") .. "|r " .. dispelStr .. "\n" ..
-        "|cffE77C70" .. self:L("OPT_LEARNED_CCS") .. "|r " .. ccStr
+        "|cff5CE0B8" .. self:L("OPT_LEARNED_DISPELS") .. "|r " .. dispelStr
     )
 
     local lang = EzWoW_SpellControlDB.lang or "Auto"
@@ -965,7 +956,7 @@ SlashCmdList["EZWOWSPELLCONTROL"] = function(msg)
             EzWoW_SpellControlDB.boardPoint = nil
             EzWoW_SpellControlDB.manualWidth = nil
             EzWoW_SpellControlDB.manualHeight = nil
-            EzWoW_SpellControlDB.sectionOrder = { "buff", "cleanse", "cc" }
+            EzWoW_SpellControlDB.sectionOrder = { "buff", "cleanse" }
         end
         if ns.boardFrame then
             ns.boardFrame:ClearAllPoints()
