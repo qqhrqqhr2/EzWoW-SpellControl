@@ -9,9 +9,9 @@ CurseForge summary (KO): 파티 버프 · 디버프 해제 · 적 대상 메즈�
 
 A small tactical board for WoW Forever: **buff missing members, cleanse debuffs and crowd-control enemies with one click**. It reads only the active spells you have learned and shows just the units that need something. It also keeps track of **the spells you can learn at each level** after you visit your class trainer, and adds **recommended talent builds** to the talent window.
 
-![Tactical board, spellbook and spells by level](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/ui_en.png)
+![Tactical board, spellbook and spells by level](https://raw.githubusercontent.com/ezwow-addons/EzWoW-SpellControl/master/docs/images/ui_en.png)
 
-![Settings window](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/settings_en.png)
+![Settings window](https://raw.githubusercontent.com/ezwow-addons/EzWoW-SpellControl/master/docs/images/settings_en.png)
 
 *The widget and spell tooltips on the left are a mock-up drawn from the addon code to show a party (made-up names). The rest are in-game screenshots with the addon set to English; the game client is Korean, so game text such as spell names stays Korean.*
 
@@ -66,9 +66,9 @@ Languages: English, 한국어, Deutsch, Français, Español, Русский, 简
 
 WoW Forever용 작은 전술 보드입니다. **빠진 버프 걸기 · 디버프 해제 · 적 대상 메즈를 클릭 한 번으로** 합니다. 마법책에서 실제로 배운 액티브 주문만 읽어 필요한 대상만 보여 줍니다. 직업 기술 전문가를 한 번 방문하면 **레벨별로 배울 주문**도 알려 주고, 특성 창에는 **직업별 추천 특성**을 넣어 줍니다.
 
-![전술 보드, 마법책과 레벨별 배울 스킬](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/ui_ko.png)
+![전술 보드, 마법책과 레벨별 배울 스킬](https://raw.githubusercontent.com/ezwow-addons/EzWoW-SpellControl/master/docs/images/ui_ko.png)
 
-![설정창](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-SpellControl/master/docs/images/settings_ko.png)
+![설정창](https://raw.githubusercontent.com/ezwow-addons/EzWoW-SpellControl/master/docs/images/settings_ko.png)
 
 *왼쪽 위젯과 주문 툴팁은 파티 화면을 보여 주려고 애드온 코드로 다시 그린 예시입니다(파티원 이름은 지어낸 이름). 나머지는 실제 게임 화면입니다(WoW Forever, 한국어 클라이언트).*
 
