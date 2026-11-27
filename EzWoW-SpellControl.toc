@@ -22,7 +22,7 @@
 ## Notes-zhTW: 小隊與團隊一鍵施放增益與驅散減益助手。(/ezsc)
 ## X-License: GPL-3.0
 ## Author: ezwow-addons
-## Version: 2.0.28
+## Version: 2.0.29
 ## Category: EzWoW
 ## IconTexture: Interface\AddOns\EzWoW-SpellControl\Media\Icon
 ## SavedVariables: EzWoW_SpellControlDB, EzWoW_SharedData, EzWoW_ShareStore_SpellControl
