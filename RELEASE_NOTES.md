@@ -1,13 +1,9 @@
-# v2.0.27
+# v2.0.28
 
 ### 한국어
-- 내 소환수와 파티원 소환수도 버프 보드에 칸이 생겨 전투 중에도 버프·해제를 할 수 있습니다(설정에서 끌 수 있음).
-- 파티 밖 소환수를 대상으로 잡아도 버프 칸이 나옵니다.
-- 우호적 대상 칸 자리를 늘 두어, 전투 중에 새로 잡은 대상에게도 버프를 줄 수 있습니다(설정에서 끌 수 있음).
-- 야생의 선물 · 기원 · 신비한 총명함 · 상급 축복 같은 단체 버프를 배우면, 빠진 사람이 3명 이상이고 재료가 있을 때 자동으로 단체 버프를 겁니다(성기사 상급 축복은 직업마다, 재료가 없으면 1인 버프).
+- 다른 사용자가 공유한 상점 물건·트레이너 기술·퀘스트를 주고받는 NPC·퀘스트 보상·오브젝트 이름을 한 사람만 보내도 바로 씁니다.
+- 두 사람의 확인이 필요한 드롭 기록은 더 오래 기다립니다.
 
 ### English
-- Your pet and your party's pets now get cells on the buff board, so they can be buffed and cleansed in combat too (can be turned off).
-- Summons outside your party get the target cell when targeted.
-- The friendly target cell now keeps its place, so a target picked in combat can be buffed too (can be turned off).
-- Learned group buffs (Gift of the Wild, Prayers, Arcane Brilliance, Greater Blessings per class) are now used by themselves when 3 or more people miss the buff and you have the reagent (otherwise the single buff).
+- Shared shop goods, trainer spells, quest givers and turn-ins, quest rewards and object names are now used as soon as one player sends them.
+- Shared drops, which still need a second player, now wait longer for one.
